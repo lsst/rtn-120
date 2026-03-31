@@ -24,9 +24,28 @@
 
 % Local commands go here.
 
+% TODO notes
+\usepackage[colorinlistoftodos]{todonotes}
+\let\Oldtodo\todo
+\renewcommand{\todo}[1]{\Oldtodo[inline, color=red]{#1}}
+\newcommand{\leanne}[2][]{\Oldtodo[inline,color=teal, #1]{Leanne: #2}}
+\newcommand{\alex}[2][]{\Oldtodo[inline,color=orange, #1]{X: #2}}
+
 % See ASPmanual2010.pdf 2.1.4  and ManuscriptInstructions.pdf for more details
 %\markboth{auth}{short title}
 
+%\providecommand{\secref}[1]{\hyperref[#1]{\autoref{#1}}}
+\providecommand{\secref}[1]{\hyperref[#1]{\S\ref{#1}}}
+\providecommand{\appref}[1]{\hyperref[#1]{Appendix \ref{#1}}}
+\providecommand{\tabref}[1]{\hyperref[#1]{\autoref{#1}}}
+\providecommand{\figref}[1]{\hyperref[#1]{\autoref{#1}}}
+\providecommand{\eqnref}[1]{\hyperref[#1]{Eq.~\ref{#1}}}
+\providecommand{\recref}[1]{\hyperref[#1]{REC-\ref{#1}}}
+
+\newcommand{\degsq}{$\rm deg^{2}$}
+
+% All graphics paths here 
+\graphicspath{{figures}}
 
 \newcommand{\docRef}{RTN-120}
 \newcommand{\docUpstreamLocation}{\url{https://github.com/lsst/rtn-120}}
