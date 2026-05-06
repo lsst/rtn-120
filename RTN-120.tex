@@ -4,12 +4,15 @@
 % Package imports go here.
 \renewcommand{\baselinestretch}{1.0} % Change to 1.65 for double spacing
 
+
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
-\usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{longtable}
+\usepackage[colorlinks=true, allcolors=blue, backref=page]{hyperref}
+\usepackage{xspace}
+\usepackage{listings}
+
 
 % Local commands go here.
 \newcommand{\aj}{AJ}
@@ -23,6 +26,63 @@
 % Package imports go here.
 
 % Local commands go here.
+% For the code
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{rtnstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=none,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{backcolour},
+    framexleftmargin=6pt,
+    framexrightmargin=6pt,
+    framextopmargin=4pt,
+    framexbottommargin=4pt
+}
+\lstset{style=rtnstyle}
+
+\newcommand\YAMLcolonstyle{\color{black}\mdseries}
+\newcommand\YAMLkeystyle{\color{magenta}\mdseries}
+\newcommand\YAMLvaluestyle{\color{codepurple}\mdseries}
+
+\lstdefinelanguage{YAML}{
+    keywords={true,false,null,y,n},
+    keywordstyle=\color{darkgray}\bfseries,
+    basicstyle=\YAMLkeystyle,                                 % assuming a key comes first
+    sensitive=false,
+    comment=[l]{\#},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color{black}\ttfamily,
+    stringstyle=\YAMLvaluestyle\ttfamily,
+    moredelim=[l][\color{black}]{\&},
+    moredelim=[l][\color{magenta}]{*},
+    moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:},   % switch to value style at :
+    morestring=[b]',
+    morestring=[b]",
+    literate =    {---}{{\ProcessThreeDashes}}3
+    {>}{{\textcolor{black}\textgreater}}1
+    {|}{{\textcolor{black}\textbar}}1
+    {\ -\ }{{\mdseries\ -\ }}3,
+}
+
+
 
 % TODO notes
 \usepackage[colorinlistoftodos]{todonotes}
@@ -64,6 +124,9 @@
 }
 
 \maketitle
+
+\setcounter{footnote}{0}
+\renewcommand{\thefootnote}{\arabic{footnote}}
 
 \input{abstract}
 
