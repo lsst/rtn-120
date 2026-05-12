@@ -1,13 +1,13 @@
 \section{Introduction}
 \label{sec:intro}
 \href{https://docs.ragas.io/}{RAGAS} framework \cite{Es2023}
-The Vera C. Rubin Observatory\cite{2019ApJ...873..111I}, located at an elevation of 2647\,m on Cerro Pach\'{o}n in Chile, is a large-aperture, wide-field optical observatory whose prime mission is to conduct the 10-year Legacy Survey of Space and Time (LSST), beginning in 2026.
+The NSF-DOE Vera C. Rubin Observatory\cite{2019ApJ...873..111I}, located at an elevation of 2647\,m on Cerro Pach\'{o}n in Chile, is a large-aperture, wide-field optical observatory whose prime mission is to conduct the 10-year Legacy Survey of Space and Time (LSST), beginning in 2026.
 The LSST will repeatedly image approximately 18,000 square degrees of sky every three nights using a 3.2-gigapixel camera mounted on the 8.4-meter Simonyi Survey Telescope.
-Rubin will generate 15--20\,TB of raw data per night from which it will issue approximately 10 million transient alerts per night.
+Each night Rubin will generate 15--20\,TB of raw data from which it will issue approximately 10 million transient alerts.
 Over its lifetime, the LSST is expected to catalog approximately 20 billion galaxies and 17 billion stars, producing a final catalog of approximately 15\,PB and roughly 500\,PB of image products across several major data releases, each accompanied by updated documentation, data product definitions, and software.
 
 This scientific output is accompanied by an extensive body of supporting documentation, including technical notes, design documents, operational guides, data product definitions, software documentation, and community-facing tutorials, distributed across a wide variety of platforms: Confluence wikis, Jira tickets, GitHub repositories, the Rubin Community Forum\footnote{\url{https://community.lsst.org}}, Slack discussions, DocuShare archives, and numerous PDF reports.
-This fragmentation creates a significant challenge for both project staff and the broader science community when attempting to locate accurate, up-to-date information.
+This fragmentation creates a significant challenge for both Rubin Observatory staff and the broader science community when attempting to locate accurate, up-to-date information.
 The challenge is compounded by the scale of the Rubin science community itself: approximately 10,000 scientists across 28 countries hold Rubin data rights, a regime in which traditional helpdesk-based user support models do not scale\cite{RTN-097}.
 Rubin's approach to community science instead focuses on fostering a vibrant community supported by infrastructure such as the Discourse-based Rubin Community Forum, to crowdsource solutions and build a deep reservoir of shared expertise\cite{RTN-121}.
 
@@ -15,13 +15,13 @@ Large language models (LLMs) offer a promising approach to this information-disc
 Their ability to understand and generate natural language makes them well suited to serving as an intelligent interface to large, heterogeneous documentation ecosystems, allowing users to find information through conversation without needing to know where each piece of information resides.
 However, LLMs face fundamental limitations when applied to domain-specific questions about Rubin Observatory.
 LLMs compress vast amounts of knowledge during training into their weights, but this encoded knowledge is \emph{static}: it cannot be updated as new information becomes available, and models can already be outdated by the time they are released.
-Because LLMs are trained on broad corpora, they often lack the \emph{domain-specific} knowledge needed to answer questions about Rubin's data products, the Rubin Science Platform, or the LSST software stack, and may generate plausible but factually incorrect responses, a phenomenon known as \emph{hallucination}.
+Because LLMs are trained on broad corpora, they often lack the \emph{domain-specific} knowledge needed to answer questions about Rubin's data products, the Rubin Science Platform, or the LSST science pipelines \cite{PSTN-019}, and may generate plausible but factually incorrect responses, a phenomenon known as \emph{hallucination}.
 Furthermore, much of the information critical to Rubin operations and science resides on internal or proprietary systems, making it entirely inaccessible to general-purpose models regardless of their training.
 
-Retrieval-Augmented Generation (RAG) was introduced by Lewis et al.\cite{Lewis2020} to address precisely these limitations.
+Retrieval-Augmented Generation (RAG) was introduced by Lewis et al.\cite{NEURIPS2020_6b493230} to address precisely these limitations.
 Their key insight was that LLMs possess a form of implicit, \emph{parametric} memory, that is, knowledge encoded in the model's weights during training, but that this memory is fixed and cannot account for information absent from the training corpus.
 By combining this parametric memory with an explicit, \emph{non-parametric} memory in the form of a searchable document index, and fetching relevant passages from that index at query time, RAG enables an LLM to generate responses grounded in specific, up-to-date context rather than relying solely on its compressed internal knowledge.
-This hybrid approach was shown to significantly improve factual accuracy on knowledge-intensive tasks compared to a standalone LLM\cite{Lewis2020}. 
+This hybrid approach was shown to significantly improve factual accuracy on knowledge-intensive tasks compared to a standalone LLM\cite{NEURIPS2020_6b493230}. 
 RAG was selected over model fine-tuning because the core challenge is not how the model responds but what information it can access, and because the knowledge base must evolve across data releases without expensive retraining\cite{RAGvsFT}.
 
 % provisionally named \emph{Reva}\footnote{Reva: from ``Rubin Enhanced Virtual Astronomer'', and echoing the concepts of ``Retrieve'' + ``AI''.}
@@ -34,18 +34,18 @@ This paper describes the motivation, architecture, and implementation of a proto
 \label{sec:motivation}
 
 \subsection{Supporting daily Rubin operations}
-A key use case is an internal chatbot that provides RAG-grounded access to the private collaboration resources used daily by Rubin project staff.
-These include Confluence wiki pages, the Jira ticketing system, Slack channel discussions, Community Forum threads, proprietary documents, engineering drawings, and a long history of design documents in the internal DocuShare archive.
+Rubin project staff rely daily on a broad set of private collaboration resources, including Confluence wiki pages, Jira tickets, Slack discussions, Community Forum threads, proprietary documents, engineering drawings, and a long history of design documents in the internal DocuShare archive.
+A RAG-grounded chatbot that makes this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions from being made on the basis of outdated or superseded documents.
 Making this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions being made on the basis of outdated or superseded documents.
 A particular strength of RAG in this context is its ability to synthesize information across platforms.
-For example, a question such as \emph{"what observing strategy was adopted for the LSSTCam science validation surveys?"} might require combining the technote reporting on the LSSTCam observing campaign strategy,  Jira tickets recording the actual commands executed, and Slack threads where details were discussed.
+For example, a question such as \emph{``what observing strategy was adopted for the LSSTCam science validation surveys?"} might require combining the technote reporting on the LSSTCam observing campaign strategy,  Jira tickets recording the actual commands executed, and Slack threads where details were discussed.
 No single platform contains the complete answer; a RAG system searching across all three can assemble it.
-Similarly, ingesting the Simonyi Survey Telescope troubleshooting guide from Confluence would allow night-time observers to query telescope faults in natural language during time-critical operations, rather than searching through confluence wikis.
+Similarly, ingesting the Simonyi Survey Telescope troubleshooting guide from Confluence would allow night-time observers to query telescope faults in natural language during time-critical operations.
 Key reference documents such as the LSST Science Book and the final telescope design document can likewise be made conversationally accessible, with answers traceable to their source.
 The chatbot would also support onboarding of new project staff, who must rapidly absorb institutional knowledge scattered across over 20 years of archived discussions, technical notes, and design decisions.
 
 \subsection{Supporting the science community}
-A primary focus of the Rubin RAG chatbot is supporting the global science community in exploiting Rubin data products.
+The Rubin RAG chatbot is also designed to support the global science community in exploiting Rubin data products.
 The Rubin Early Science Program\cite{RTN-011} will release science-grade commissioning and early pre-survey data to support  community preparations for LSST operations and enable high-impact science as early as possible.
 The first full LSST data release, DR1, is expected approximately two years after the start of survey operations.
 In the intervening period, a substantial volume of data will be made available through transient alerts, nightly processed images, and catalogs of single-epoch detections, as well as through the Data Preview program (DP1\cite{RTN-095}, DP2) in the period leading up to DR1.
@@ -54,9 +54,9 @@ During this same period, the community will also be familiarizing itself with Ru
 A chatbot grounded in authoritative, up-to-date Rubin documentation can lower the barrier to entry, help users navigate unfamiliar systems, and accelerate the path from data access to scientific results.
 
 The eventual goal is for the Rubin chatbot to answer technical questions and provide at least beginner-level coding assistance for working with the LSST Science Pipelines.
-A key challenge for users will be navigating the Rubin data model, which comprises hundreds of columns across multiple catalog tables with Rubin-specific naming conventions, and constructing correct and efficient ADQL/TAP queries.
+A key challenge for users will be navigating the Rubin data model\cite{LSE-163}, which comprises hundreds of columns across multiple catalog tables with Rubin-specific naming conventions, and constructing correct and efficient ADQL/TAP queries.
 For example, a user asking \emph{``how do I select clean galaxy samples from the Object table?''} needs to know which flag columns to filter on to exclude objects with unreliable shape or light profile modeling, and how to apply signal-to-noise cuts to retain only well-detected galaxies. These column names are specific to Rubin and may change between data releases; a general-purpose LLM may hallucinate plausible but incorrect names, while a RAG system grounded in the current schema helps mitigate this risk.
-Similarly, a question such as \emph{"how do I retrieve the coadded images for the ECDFS field from DP1?"} requires knowing the correct Butler collection name, the filter designations available in DP1, and the current Butler API syntax, all details that may change between releases and are absent from general LLM training data.
+Similarly, a question such as \emph{``how do I retrieve the coadded images for the ECDFS field from DP1?"} requires knowing the correct Butler\cite{2022SPIE12189E..11J} collection name, the filter designations available in DP1, and the current Butler API syntax, all details that may change between releases and are absent from general LLM training data.
 A RAG system grounded in the schema documentation, data product definitions, and worked examples from tutorials and Community Forum posts can provide reliable, validated guidance that a general-purpose LLM cannot.
 The Community Forum is a particularly valuable knowledge source: a user encountering an error running a tutorial notebook may find that the identical problem was already resolved on the Forum; the chatbot can surface that answer directly rather than requiring the user to search the Forum manually.
 
@@ -68,6 +68,7 @@ If it produces an incorrect answer, this may indicate ambiguous or contradictory
 For example, testing whether the chatbot correctly reports which filters are available in DP1, a subset of the full \textit{ugrizy} set, can reveal whether the documentation clearly distinguishes DP1-specific content from general LSST descriptions.
 The approach can also detect whether tutorial notebooks reference deprecated API calls that no longer work against the current software stack, or whether documented Butler collection names match the collections actually deployed on the RSP.
 Rubin's Community Science Team has already explored using \href{https://vale.sh}{Vale} for automated style verification of user-facing documentation; the chatbot provides a complementary, content-level validation approach.
+%
 % ============================================================================
 \section{Architecture}
 \label{sec:architecture}
@@ -77,7 +78,7 @@ This modularity has been essential during development, allowing us to experiment
 Figure~\ref{fig:architecture} shows the overall system architecture.
  
 % TODO: Finalize figure
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/rubin_rag_architecture.pdf}
   \caption{Architecture of the Rubin RAG chatbot showing the flow from document ingestion through embedding, vector storage, retrieval, and response generation. Documents from the Rubin knowledge base are loaded, chunked, and embedded using OpenAI's \texttt{text-embedding-3-large} model. Embeddings and text chunks are stored in the Weaviate vector database.
@@ -133,7 +134,7 @@ Its modular design allows individual components, including loaders, splitters, e
 \label{sec:frontend}
  
 The user-facing interface is implemented as a \href{https://streamlit.io}{Streamlit} application providing a conversational chat interface.
-The interface includes selectable source filters (Confluence, Jira, LSST Forum Docs, Local Docs) that allow users to control which document collections are searched for a given query.
+The interface includes selectable source filters, e.g Confluence, Jira, LSST forum,  that allow users to control which document collections are searched for a given query.
 The application is lightweight, requiring relatively little code while providing an intuitive chat paradigm.
 Figure~\ref{fig:rubin_rag_ui} shows the interface as deployed on the RSP.
 
@@ -156,7 +157,7 @@ The Phalanx-based deployment model means that the chatbot's configuration is man
 \subsection{Integration with the Rubin Science Platform}
 \label{sec:rsp_integration}
  
-From the outset, the RAG chatbot was designed to be deployed as a service within the Rubin Science Platform (RSP), following the same model used for all other RSP services, at both the user-facing cloud RSP\footnote{\url{https://data.lsst.cloud}} and the on-premise United States Data Facility (USDF) at SLAC National Accelerator Laboratory\cite{2024ASPC..535..227O}.
+From the outset, the RAG chatbot was designed to be deployed as a service within the Rubin Science Platform (RSP), following the same model used for all other RSP services, at both the user-facing cloud RSP\footnote{\url{https://data.lsst.cloud}} and the on-premises United States Data Facility (USDF) at SLAC National Accelerator Laboratory\cite{2024ASPC..535..227O}.
 
 The LSST will accumulate approximately 50\,PB of data products by the end of year~1, growing to roughly 500\,PB by year~10; far too large for users to download and analyse locally.
 The RSP is Rubin's answer to this challenge, providing cloud-based access to LSST data products and services through three interfaces: the Portal (browser-based data discovery), Notebooks (Jupyter-based analysis), and Web APIs (programmatic access via Virtual Observatory interfaces).
@@ -188,8 +189,8 @@ The pipeline consists of three main steps: loading and cleaning, chunking, and e
 
 The Rubin RAG system ingests documents from the following sources:
 \begin{itemize}
-  \item \textbf{PDFs}: Technical notes, design documents, and reports;
-  \item \textbf{GitHub repositories}: The LSST codebase and its documentation, DP1 tutorials, and software documentation;
+  \item \textbf{Rubin technical documents}: Design documents, studies, reports, requirements specifications, and technical notes authored in a variety of formats including \LaTeX{}, reStructuredText, Markdown, and occasionally Word. Where the original source is available it is ingested directly; a rendered PDF is used only when no source format can be obtained.
+  \item \textbf{GitHub repositories}: Including the LSST codebase and its documentation, Data Release tutorials and documentation;
  \item \textbf{Jira tickets:} Technical project management and issue-tracking records containing design discussions, implementation decisions, and bug reports. Administrative and access-restricted tickets are excluded.  \item \textbf{Rubin Community Forum}: Discourse-based forum threads, including resolved support questions that represent practical knowledge and experience;
  \item \textbf{Confluence:} Selected internal wiki pages containing meeting notes, design discussions, and operational procedures. Access-restricted and private spaces are excluded from ingestion.
   \item \textbf{Slack channels:} Selected technical discussion channels containing decisions, troubleshooting conversations, and domain expertise relevant to operations and data processing. Private and administrative channels are excluded; and
@@ -206,9 +207,11 @@ In both cases the result is a list of LangChain \texttt{Document} objects contai
 
 Several areas for improvement have been identified.
 The current pipeline loses information encoded in figures and diagrams, which are prevalent in Rubin documentation; vision-language models could generate text descriptions of these for embedding, making visual content searchable.
-Table extraction also warrants attention, as standard PDF text extraction can flatten or garble the structured tables that appear in technotes and schema definitions.
+For scanned documents and image-based PDFs, particularly prevalent in the DocuShare legacy archive where non-PDF source formats are often unavailable, we are evaluating OCR and multimodal extraction techniques to recover text that standard PDF parsers cannot access.
+Where source formats are available, we ingest them directly: LaTeX technotes are parsed from their LaTeX source rather than from rendered PDFs, and Markdown and reStructuredText documents handle tabular content reliably without the extraction issues that affect PDF tables.
 For conversational sources such as the Community Forum, Jira, and Slack, raw ingestion produces noisy content mixing resolved answers with tangential discussion; extracting clean, structured records, such as resolved question-answer pairs from forum threads or decision records from Jira tickets, would substantially improve retrieval quality.
-Finally, as the corpus grows, deduplication across sources becomes important: the same information often appears in a Jira ticket, a Confluence page, and a technote, and retrieving contradictory versions of the same content degrades response quality.
+For Jira in particular, distinguishing currently relevant tickets from obsolete ones is an open challenge; approaches under consideration include filtering by ticket status and recency, weighting by activity level, and applying time-decay factors during retrieval so that older, unresolved tickets are ranked lower than recent, resolved ones.
+Finally, as the corpus grows, deduplication across sources becomes important: the same information often appears in a Jira ticket, a Confluence page, and a technote, and retrieving contradictory versions of the same content degrades response quality
 
 \subsection{Chunking}
 \label{sec:chunking}
@@ -256,7 +259,6 @@ When a user submits a query through the Streamlit interface, the system processe
 % ============================================================================
 \section{Evaluation and Current Status}
 \label{sec:evaluation}
-% ============================================================================
  
 Evaluating RAG systems is non-trivial: standard LLM benchmarks do not measure retrieval quality, and the correctness of a generated response depends on both the relevance of the retrieved chunks and the quality of generation conditioned on that context.
  
@@ -264,10 +266,11 @@ Evaluating RAG systems is non-trivial: standard LLM benchmarks do not measure re
 \label{sec:validation_framework}
 
 We have developed a validation query set categorized into three types:
+
 \begin{enumerate}
-\item Queries answerable from general LLM knowledge without any domain-specific retrieval, to verify baseline behavior;
-\item Queries that require Rubin-specific documentation to answer correctly, to verify that retrieval is effective and the system outperforms the base LLM; and
-\item Queries that probe known failure modes, such as questions about very recent events, highly specific technical details, or information that exists only in private systems.
+\item Queries answerable from general LLM knowledge without any domain-specific retrieval, to verify baseline behavior, for example: \emph{``What is a color-magnitude diagram?''} or \emph{``What is the difference between AB and Vega magnitude systems?''};
+\item Queries that require Rubin-specific documentation to answer correctly, to verify that retrieval is effective and the system outperforms the base LLM, for example: \emph{``What flags should I use to select clean galaxy samples from the DP1 Object table?''} or \emph{``What is the Butler in the LSST Science Pipelines?''}; and
+\item Queries that probe known failure modes, such as questions about very recent events, highly specific technical details, or information that exists only in private systems, for example: \emph{``What is the magnitudeError column in the DP1 Object table?''} (a non-existent column) or \emph{``Can I use the DP0.2 tutorials to work with DP1 data?''} (version confusion).
 \end{enumerate}
 \noindent
 For each query, we define either an expected answer or an expected behavior (e.g., declining to answer or requesting clarification).
@@ -326,12 +329,12 @@ Evaluating alternative LLM and embedding model backends, including more recent O
 \item\textbf{Corpus expansion and automation.}
 Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion pipeline with update triggers linked to source platforms (GitHub webhooks, API polling for Jira and Confluence, Slack channel ingestion).
  
-\item\textbf{Productionization.}
+\item\textbf{Productizing.}
 Transitioning from prototype to a production-quality service with robust monitoring, logging, usage analytics, and automatic re-ingestion of updated and new data sources.
 
 \end{itemize}
 
-\subsection{Toward agentic RAG}
+\subsection{Towards agentic RAG}
 \label{sec:agentic_rag}
  
 The current prototype follows a fixed pipeline: each query passes through retrieval, augmentation, and generation in a single pass without the ability to iterate, reformulate queries, or decompose complex multi-step questions.
@@ -348,7 +351,7 @@ We plan to investigate agentic RAG architectures as the system matures beyond th
 \label{sec:summary}
  
 We have presented the design and implementation of a RAG-based chatbot for information discovery at the Vera C. Rubin Observatory, deployed as a service on the Rubin Science Platform.
-The system addresses a real operational need: enabling both project staff and the Rubin science community to efficiently locate accurate information across a large, fragmented, and continuously evolving documentation ecosystem.
+The system addresses a real operational need: enabling both Rubin  Observatory staff and the Rubin science community to efficiently locate accurate information across a large, fragmented, and continuously evolving documentation ecosystem.
 The prototype is functional and deployed on the RSP at both the cloud-based US Data Access Center and the on-premise USDF at SLAC, and is being prepared to support the community during the Early Science period.
 As the LSST survey progresses and both data volume and documentation grow across successive releases, the importance of this capability will only increase.
 Rather than a static documentation chatbot, a value proposition that has eroded as general-purpose LLMs have become web-connected, the longer-term vision is a science enablement assistant that helps users go from a science question to working code against real Rubin data, grounded in authoritative and current sources.
