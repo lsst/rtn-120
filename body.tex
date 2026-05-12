@@ -1,6 +1,6 @@
 \section{Introduction}
 \label{sec:intro}
-
+\href{https://docs.ragas.io/}{RAGAS} framework \cite{Es2023}
 The Vera C. Rubin Observatory\cite{2019ApJ...873..111I}, located at an elevation of 2647\,m on Cerro Pach\'{o}n in Chile, is a large-aperture, wide-field optical observatory whose prime mission is to conduct the 10-year Legacy Survey of Space and Time (LSST), beginning in 2026.
 The LSST will repeatedly image approximately 18,000 square degrees of sky every three nights using a 3.2-gigapixel camera mounted on the 8.4-meter Simonyi Survey Telescope.
 Rubin will generate 15--20\,TB of raw data per night from which it will issue approximately 10 million transient alerts per night.
@@ -67,8 +67,7 @@ If the chatbot cannot answer a question that should be answerable, this signals 
 If it produces an incorrect answer, this may indicate ambiguous or contradictory source material.
 For example, testing whether the chatbot correctly reports which filters are available in DP1, a subset of the full \textit{ugrizy} set, can reveal whether the documentation clearly distinguishes DP1-specific content from general LSST descriptions.
 The approach can also detect whether tutorial notebooks reference deprecated API calls that no longer work against the current software stack, or whether documented Butler collection names match the collections actually deployed on the RSP.
-Rubin's Community Science Team has already explored using Vale\footnote{\url{https://vale.sh}} for automated style verification of user-facing documentation; the chatbot provides a complementary, content-level validation approach.
-
+Rubin's Community Science Team has already explored using \href{https://vale.sh}{Vale} for automated style verification of user-facing documentation; the chatbot provides a complementary, content-level validation approach.
 % ============================================================================
 \section{Architecture}
 \label{sec:architecture}
@@ -103,7 +102,7 @@ The following subsections describe the specific components selected for each sta
 \label{sec:weaviate}
  
 The retrieval stage depends on an efficient, searchable store of document embeddings.
-We use Weaviate\footnote{\url{https://weaviate.io}} as the vector database.
+We use \href{https://weaviate.io}{Weaviate} as the vector database.
 Weaviate organizes data in ``collections'' that store text chunks, associated metadata (source URL, document identifier, page number, creation date), and their vector embeddings together.
 This co-location of vectors, text, and metadata allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its provenance.
 Weaviate was selected for its native integration with LangChain, its support for multiple vectorization backends, and its suitability for deployment on Kubernetes.
@@ -125,7 +124,7 @@ We plan to benchmark alternative LLMs including more recent OpenAI models, Anthr
 \subsection{Augmentation and orchestration: LangChain}
 \label{sec:langchain}
  
-LangChain\footnote{\url{https://www.langchain.com}} is an open-source Python library that provides the integration layer connecting all three RAG stages.
+\href{https://www.langchain.com}{LangChain} is an open-source Python library that provides the integration layer connecting all three RAG stages.
 During ingestion, LangChain manages the document loading, chunking, and embedding pipeline that populates the Weaviate vector store (Section~\ref{sec:ingestion}).
 At query time, LangChain orchestrates the full RAG cycle: embedding the user query, retrieving relevant chunks from Weaviate, constructing the augmented prompt with retrieved context, and routing the augmented prompt to the generative LLM.
 Its modular design allows individual components, including loaders, splitters, embedding models, vector stores, and LLMs, to be swapped independently, which has been essential for the iterative experimentation and optimization described in Section~\ref{sec:future}.
@@ -133,7 +132,7 @@ Its modular design allows individual components, including loaders, splitters, e
 \subsection{Frontend: Streamlit}
 \label{sec:frontend}
  
-The user-facing interface is implemented as a Streamlit\footnote{\url{https://streamlit.io}} application providing a conversational chat interface.
+The user-facing interface is implemented as a \href{https://streamlit.io}{Streamlit} application providing a conversational chat interface.
 The interface includes selectable source filters (Confluence, Jira, LSST Forum Docs, Local Docs) that allow users to control which document collections are searched for a given query.
 The application is lightweight, requiring relatively little code while providing an intuitive chat paradigm.
 Figure~\ref{fig:rubin_rag_ui} shows the interface as deployed on the RSP.
@@ -148,11 +147,11 @@ Figure~\ref{fig:rubin_rag_ui} shows the interface as deployed on the RSP.
 \subsection{Deployment infrastructure}
 \label{sec:deployment}
  
-The chatbot is deployed using Rubin Observatory's standard deployment model, Phalanx.\cite{SQR-056}
-Phalanx is built on a layered infrastructure stack: Kubernetes\footnote{\url{https://kubernetes.io}} for container orchestration, Argo~CD\footnote{\url{https://argo-cd.readthedocs.io}} for GitOps-based continuous delivery, Helm\footnote{\url{https://helm.sh}} for packaging Kubernetes applications, and the Safir framework\footnote{\url{https://safir.lsst.io}} for Rubin-specific service development.
+The chatbot is deployed using Rubin Observatory's standard deployment model, Phalanx \cite{SQR-056}. 
+Phalanx is built on a layered infrastructure stack: \href{https://kubernetes.io}{Kubernetes} for container orchestration, \href{https://argo-cd.readthedocs.io}{Argo~CD} for GitOps-based continuous delivery, \href{https://helm.sh}{Helm} for packaging Kubernetes applications, and the \href{https://safir.lsst.io}{Safir} framework for Rubin-specific service development.
 The chatbot is containerized via a Dockerfile in the repository and deployed through the same GitOps workflows used for all other RSP services.
  
-The Phalanx-based deployment model means that the chatbot's configuration is managed as code in the Phalanx repository\footnote{https://github.com/lsst-sqre/phalanx}, enabling reproducible deployments, version-controlled updates, and rollback capability.
+The Phalanx-based deployment model means that the chatbot's configuration is managed as code in the \href{https://github.com/lsst-sqre/phalanx}{Phalanx repository}, enabling reproducible deployments, version-controlled updates, and rollback capability.
   
 \subsection{Integration with the Rubin Science Platform}
 \label{sec:rsp_integration}
@@ -172,7 +171,8 @@ Deploying the chatbot within this same infrastructure provides several important
 \subsection{Codebase}
 \label{sec:codebase}
  
-The codebase is developed in Python and maintained as open-source software in the \texttt{lsst-dm/rubin\_rag} GitHub repository\footnote{\url{https://github.com/lsst-dm/rubin\_rag}}.
+The codebase is developed in Python and maintained as open-source
+software in the \href{https://github.com/lsst-dm/rubin_rag}{\texttt{lsst-dm/rubin\_rag}} GitHub repository.
 The repository contains the Streamlit application, the Weaviate connection and query layer, the data ingestion code, and Jupyter notebooks used for prototyping and testing.
 The deployment configuration is managed through a corresponding branch in the Phalanx repository.
 The project is released under the MIT license.
@@ -277,7 +277,7 @@ Running each query with and without retrieval enabled quantifies the improvement
 \subsection{RAGAS Framework}
 \label{sec:ragas}
  
-For automated evaluation, we use the RAGAS  framework\footnote{\url{https://docs.ragas.io/}}\cite{Es2023}, an open-source toolkit that provides reference-free metrics specifically designed for RAG systems.
+For automated evaluation, we use the \href{https://docs.ragas.io/}{RAGAS} framework \cite{Es2023}, an open-source toolkit that provides reference-free metrics specifically designed for RAG systems.
 RAGAS evaluates system quality along four axes: \emph{faithfulness}, \emph{answer relevancy}, \emph{context precision}, and \emph{context recall}.
 Together these cover both the retrieval and generation stages of the pipeline, allowing failures to be attributed to the appropriate stage.
  RAGAS also supports the definition of custom metrics, enabling domain-specific evaluation criteria to be added alongside the built-in ones.
