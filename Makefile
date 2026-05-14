@@ -14,11 +14,10 @@ endif
 export TEXMFHOME ?= lsst-texmf/texmf
 
 #asp tex is a bit odd so latexml fails .. 
+
 $(DOCNAME).pdf: $(tex) meta.tex local.bib authors.tex aglossary.tex
 	latexmk -bibtex -xelatex -f $(DOCNAME)
 	makeglossaries $(DOCNAME)
-	latexmk -bibtex -xelatex -f $(DOCNAME)
-
 
 # Acronym tool allows for selection of acronyms based on tags - you may want more than DM
 # If this is more T&S put "TS" instead of "DM"
@@ -26,7 +25,11 @@ aglossary.tex: $(tex) myacronyms.txt
 	$(TEXMFHOME)/../bin/generateAcronyms.py -gt "DM" $(tex)
 
 authors.tex:  authors.yaml
-	python3 $(TEXMFHOME)/../bin/db2authors.py --mode spie > authors.tex 
+	python3 $(TEXMFHOME)/../bin/db2authors.py --mode spie > authors.tex
+	
+aglossary.tex :$(tex) myacronyms.txt
+	python3 $(TEXMFHOME)/../bin/generateAcronyms.py -t"Sci DM Gen" -g $(tex)
+
 
 .PHONY: clean
 clean:

@@ -17,6 +17,12 @@ LLMs compress vast amounts of knowledge during training into their weights, but 
 Because LLMs are trained on broad corpora, they often lack the \emph{domain-specific} knowledge needed to answer questions about Rubin's data products, the Rubin Science Platform, or the LSST science pipelines \cite{PSTN-019}, and may generate plausible but factually incorrect responses, a phenomenon known as \emph{hallucination}.
 Furthermore, much of the information critical to Rubin operations and science resides on internal or proprietary systems, making it entirely inaccessible to general-purpose models regardless of their training.
 
+The domain itself presents additional retrieval challenges that affect the full information-discovery pipeline for both observatory staff and the science community. 
+Astrophysical vocabulary is dense and highly specialized, and the relevance of a concept often depends strongly on context. 
+Terms such as ``AGN feedback,'' ``SMBH accretion,'' ``halo quenching,'' and ``Type~Ia progenitor channels'' refer to distinct physical processes, yet in the context of a query about how compact objects influence galaxy evolution, all may be highly relevant despite sharing little direct keyword overlap. 
+Mathematical symbols and equations also carry semantic weight that general-purpose retrieval systems may not fully capture. 
+In the Rubin context these challenges are compounded by observatory-specific terminology in which common English words carry precise technical meanings e.g., ``Butler'' as a data access framework, ``tract'' and ``patch'' as sky tiling units,  and by a knowledge base spanning staff operations, engineering, and science across dozens of platforms.
+
 Retrieval-Augmented Generation (RAG) was introduced by Lewis et al.\cite{NEURIPS2020_6b493230} to address precisely these limitations.
 Their key insight was that LLMs possess a form of implicit, \emph{parametric} memory, that is, knowledge encoded in the model's weights during training, but that this memory is fixed and cannot account for information absent from the training corpus.
 By combining this parametric memory with an explicit, \emph{non-parametric} memory in the form of a searchable document index, and fetching relevant passages from that index at query time, \gls{RAG} enables an LLM to generate responses grounded in specific, up-to-date context rather than relying solely on its compressed internal knowledge.
@@ -42,6 +48,7 @@ No single platform contains the complete answer; a \gls{RAG} system searching ac
 Similarly, ingesting the \gls{Simonyi Survey Telescope} troubleshooting guide from Confluence would allow night-time observers to query telescope faults in natural language during time-critical operations.
 Key reference documents such as the \gls{LSST} Science Book and the final telescope design document can likewise be made conversationally accessible, with answers traceable to their source.
 The virtual assistant would also support onboarding of new project staff, who must rapidly absorb institutional knowledge scattered across over 20 years of archived discussions, technical notes, and design decisions.
+Staff queries also present intrinsic retrieval challenges: technical vocabulary is dense and context-dependent, and the same subsystem, component, or failure mode is frequently referred to by different names across platforms. Jira tickets, Confluence pages, and Slack threads each develop their own shorthand for the same concepts, requiring a retrieval system that matches on meaning rather than exact terms.
 
 \subsection{Supporting the science community}
 The Rubin \gls{RAG} virtual assistant is also designed to support the global science community in exploiting Rubin data products.
@@ -105,7 +112,7 @@ The retrieval stage depends on an efficient, searchable store of document embedd
 We use \href{https://weaviate.io}{Weaviate} as the vector database.
 Weaviate organizes data in ``collections'' that store text chunks, associated \gls{metadata} (source \gls{URL}, document identifier, page number, creation date), and their vector embeddings together.
 This co-location of vectors, text, and \gls{metadata} allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its \gls{provenance}.
-Weaviate was selected for its native integration with LangChain, its support for multiple vectorization backends, and its suitability for deployment on \gls{Kubernetes}.
+Weaviate was selected for its native integration with LangChain, its support for multiple vectorization backends, its native hybrid search capability combining dense vector and sparse keyword search, and its suitability for deployment on \gls{Kubernetes}.
  
 \subsection{Retrieval and generation: embedding and generative models}
 \label{sec:llm}
@@ -118,7 +125,7 @@ Both models are accessed via the OpenAI \gls{API} through keys provided to the W
  
 % TODO: Update model versions if upgraded by time of publication.
  
-While we use OpenAI for both components during development, the modular architecture allows alternative embedding models and LLMs to be substituted.
+While we use OpenAI for both components during development, the modular architecture allows alternative LLMs to be substituted.
 We plan to benchmark alternative LLMs including more recent OpenAI models, Anthropic's Claude, and open-source alternatives to optimize the trade-off between response quality, latency, and cost.
  
 \subsection{Augmentation and orchestration: LangChain}
@@ -232,14 +239,16 @@ Cell-level chunking of notebooks is particularly important, as tutorial notebook
 
 \subsection{Embedding}
 %
-After chunking, documents are embedded using the OpenAI \texttt{text-embedding-3-large} model via LangChain's \texttt{WeaviateVectorStore}, which creates and populates Weaviate collections.
-Each collection stores the chunk text, \gls{metadata}, and vector embedding together, enabling efficient similarity search at query time.
-The same embedding model is used for both documents at ingestion time and for user queries at retrieval time, ensuring that both are represented in the same semantic vector space.
+After chunking, documents are embedded using the OpenAI \texttt{text-embedding-3-large} model via LangChain's \texttt{WeaviateVectorStore}, which creates and populates the corresponding Weaviate collections. 
+Each collection stores the chunk text, associated \gls{metadata}, and vector embedding together, enabling efficient similarity search at query time.
+The \texttt{text-embedding-3-large} model is well suited to the semantic retrieval requirements of this application, particularly for heterogeneous scientific and technical text \cite{openai2024embeddings}. 
+The same embedding model is used both during document ingestion and at query time, ensuring that documents and user queries are represented within a shared semantic vector space.
 
-Several directions for improving embedding quality are under consideration.
-The current pure vector similarity search can miss exact term matches when users query specific column names, error messages; we plan to evaluate hybrid retrieval combining dense (vector) and sparse (BM25 keyword) search, a capability Weaviate supports natively.
-We also plan to benchmark alternative embedding models, since the general-purpose \texttt{text-embedding-3-large} may not optimally represent Rubin-specific terminology where common words carry domain-specific meanings (e.g., ``Butler'' as a data access framework, ``tract'' and ``patch'' as sky tiling units).
-Finally, we are exploring metadata-enriched embedding, in which document context such as the title, section header, and source type is prepended to each chunk before embedding, so that the vector representation captures provenance alongside content.
+
+We are also evaluating metadata-enriched embedding, in which document context such as the source title, section header, and document type is prepended to each chunk prior to embedding. 
+This allows the resulting vector representation to incorporate not only the chunk content itself, but also aspects of its provenance and document context, which may improve retrieval precision when source or section information is relevant to a query.
+
+In the near term, we do not anticipate changing the embedding model unless adoption of an alternative LLM backend necessitates it, as discussed in Section~\ref{sec:nearterm}.
 
 % ============================================================================
 \section{Query Processing and Response Generation}
@@ -255,6 +264,12 @@ When a user submits a query through the Streamlit interface, the system processe
   \item \textbf{Source citation}: The interface displays the source documents from which context was retrieved, enabling the user to verify the information and consult the primary sources directly.
 \end{enumerate}
 
+The current retrieval step uses pure cosine similarity search, which is effective for semantic matching but can miss queries containing exact identifiers such as column names, API calls, or error messages that do not paraphrase well.
+We plan to investigate replacing this with hybrid retrieval, combining dense vector similarity with sparse BM25 keyword search.
+BM25 is a classical keyword-based retrieval algorithm that ranks documents by how well they match query terms, and remains one of the most widely used sparse retrieval methods in information retrieval and search engines\cite{Robertson2009}.
+In modern RAG systems, combining BM25 with dense vector search is a well-established pattern precisely because the two methods are complementary: vector search captures semantic similarity while BM25 captures exact term matches, so a chunk can surface for either reason or both\cite{Luan2021}.
+Weaviate supports hybrid search natively, and this change requires no alteration to the ingestion pipeline nor embedding model.
+
 % ============================================================================
 \section{Evaluation and Current Status}
 \label{sec:evaluation}
@@ -267,8 +282,8 @@ Evaluating \gls{RAG} systems is non-trivial: standard LLM benchmarks do not meas
 We have developed a validation query set categorized into three types:
 
 \begin{enumerate}
-\item Queries answerable from general LLM knowledge without any domain-specific retrieval, to verify baseline behavior, for example: \emph{``What is a color-magnitude diagram?''} or \emph{``What is the difference between AB and Vega magnitude systems?''};
-\item Queries that require Rubin-specific documentation to answer correctly, to verify that retrieval is effective and the system outperforms the base LLM, for example: \emph{``What flags should I use to select clean galaxy samples from the \gls{DP1} Object table?''} or \emph{``What is the Butler in the \gls{LSST Science Pipelines}?''}; and
+\item Queries answerable from general LLM knowledge without any domain-specific retrieval, to verify baseline behavior, for example: \emph{``What is a color-magnitude diagram?''}.
+\item Queries that require Rubin-specific documentation to answer correctly, to verify that retrieval is effective and the system outperforms the base LLM, for example: \emph{``What flags should I use to select clean galaxy samples from the \gls{DP1} Object table?''}.
 \item Queries that probe known failure modes, such as questions about very recent events, highly specific technical details, or information that exists only in private systems, for example: \emph{``What is the magnitudeError column in the \gls{DP1} Object table?''} (a non-existent column) or \emph{``Can I use the \gls{DP0}.2 tutorials to work with \gls{DP1} data?''} (version confusion).
 \end{enumerate}
 \noindent
@@ -288,12 +303,11 @@ For Rubin, this opens the possibility of metrics that verify whether a response 
 \subsection{Current performance and diagnosis}
 \label{sec:performance}
  
-Initial end-to-end evaluation reveals that response quality does not yet meet the standard required for community deployment.
-While the core \gls{pipeline} is functional, applying the RAGAS metrics to the validation query set shows that degradation arises from multiple interacting sources across the full \gls{pipeline} rather than any single bottleneck.
+Initial qualitative evaluation indicates that response quality does not yet meet the standard required for community deployment.
+While the core \gls{pipeline} is functional, preliminary assessment suggests that degradation arises from multiple interacting sources across the full \gls{pipeline} rather than any single bottleneck; systematic measurement using the RAGAS framework against the validation query set is planned.
  
-On the \emph{retrieval} side, the current fixed-size chunking strategy produces chunks that frequently split relevant context across boundaries, reducing context recall.
-The small-to-big retrieval approach and semantic chunking strategies described in Section~\ref{sec:chunking} are being evaluated as alternatives.
-Embedding model selection also plays a role: the general-purpose \texttt{text-embedding-3-large} model may not optimally represent Rubin's highly technical vocabulary, including observatory-specific acronyms, instrument names, and catalog \gls{schema} terminology.
+On the \emph{retrieval} side, the current fixed-size chunking strategy produces chunks that frequently split relevant context across boundaries, reducing context recall; the small-to-big and semantic chunking strategies described in Section~\ref{sec:chunking} are being evaluated as alternatives.
+The inherent challenges of astrophysics and observatory retrieval, including vocabulary variation, context-dependent terminology, and dense technical language, also contribute; improvements here are being pursued through chunking strategy, hybrid retrieval, and corpus quality.
  
 On the \emph{generation} side, systematic prompt engineering has not yet been performed.
 The current system prompt and retrieval-augmented prompt template were constructed heuristically; structured optimization is planned.
@@ -318,12 +332,19 @@ The following sections describe planned near-term improvements and the longer-te
 \item\textbf{Chunking strategy optimization.}
 The current fixed-size chunking is a primary source of retrieval degradation, producing chunks that split relevant context across boundaries and reduce recall. Improved chunking strategies (Section~\ref{sec:chunking}) are expected to increase retrieval precision, ensure that retrieved chunks contain complete and coherent answers, and preserve executable code blocks intact for the coding assistance use case.
 
+\item\textbf{Hybrid retrieval.}
+Deploying Weaviate's native hybrid search to combine dense vector similarity with sparse BM25 keyword scoring, as described in Section~\ref{sec:query}, to improve recall for queries that include exact identifiers such as column names, API calls, or error messages that pure semantic search may miss.
+
+\item\textbf{Metadata-enriched embedding.}
+Prepending document context (source title, section header, document type) to each chunk before embedding, so that the vector representation encodes provenance alongside content, improving retrieval precision for queries where the source or section of a document is relevant.
+
 \item\textbf{Prompt engineering.}
 Systematic optimization of the system prompt and retrieval-augmented prompt template to steer the model toward more accurate, well-structured, and appropriately scoped responses.
 The system prompt governs how the LLM interprets retrieved context, when it declines to answer, and how it attributes its sources; careful tuning of these instructions has a significant impact on response quality.
  
 \item\textbf{Model benchmarking.}
-Evaluating alternative LLM and embedding model backends, including more recent OpenAI models, Anthropic's Claude, and open-source alternatives, to optimize the trade-off between response quality, latency, and cost.
+Evaluating alternative LLM backends, including more recent OpenAI models, Anthropic's Claude, and open-source alternatives, to optimize the trade-off between response quality, latency, and cost.
+Adopting a different LLM may also require a corresponding change of embedding model: Anthropic recommends VoyageAI embeddings for use with Claude, and VoyageAI models are strong on scientific and technical documents, code, and the preservation of semantic relationships in complex, specialized terminology, making them a natural candidate if the system moves to a Claude-based backend.
  
 \item\textbf{Corpus expansion and automation.}
 Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion \gls{pipeline} with update triggers linked to source platforms (GitHub webhooks, \gls{API} polling for Jira and Confluence, Slack channel ingestion).
