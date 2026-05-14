@@ -4,6 +4,8 @@
 % Package imports go here.
 \renewcommand{\baselinestretch}{1.0} % Change to 1.65 for double spacing
 
+\usepackage[nonumberlist,nogroupskip,toc,numberedsection=autolabel,style=index]{glossaries}
+
 
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
@@ -104,11 +106,14 @@
 
 \newcommand{\degsq}{$\rm deg^{2}$}
 
-% All graphics paths here 
+% All graphics paths here
 \graphicspath{{figures}}
 
 \newcommand{\docRef}{RTN-120}
 \newcommand{\docUpstreamLocation}{\url{https://github.com/lsst/rtn-120}}
+
+\input{aglossary}
+\makeglossaries
 
 
 \begin{document}
@@ -141,5 +146,9 @@ Additional Rubin Observatory funding comes from private donations, grants to uni
 % https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies
 \bibliographystyle{spiebib}
 \bibliography{local,lsst,lsst-dm,refs_ads,refs,books}
+
+\printglossaries
+
+
 
 \end{document}
