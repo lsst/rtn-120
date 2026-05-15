@@ -10,3 +10,8 @@ http
 p
 s
 A
+Science Platform
+Camera
+Release
+Data Release
+Data

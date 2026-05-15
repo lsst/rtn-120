@@ -230,17 +230,19 @@ FUNCTION {bold}                   %% kmh - new function like emphasize
 
 INTEGERS { nameptr namesleft numnames }
 
+
 FUNCTION {format.url}
-{
-  url empty$
-    { doi empty$
-      'skip$
+{ 
+   doi empty$
+      { url empty$
+    	'skip$
+         { "\url{" url * "}" * output }
+      if$
+      }
       { "DOI: \url{https://doi.org/" doi * "}" * output }
-    if$
-    }
-    { "\url{" url * "}" * output }
-  if$
+   if$
 }
+
 
 FUNCTION {format.names}
 { 's :=
