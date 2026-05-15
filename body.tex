@@ -43,7 +43,7 @@ Rubin Observatory staff rely daily on a broad set of private collaboration resou
 A \gls{RAG}-grounded virtual assistant that makes this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions from being made on the basis of outdated or superseded documents.
 Making this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions being made on the basis of outdated or superseded documents.
 A particular strength of \gls{RAG} in this context is its ability to synthesize information across platforms.
-For example, a question such as \emph{``what observing strategy was adopted for the \gls{LSSTCam} science validation surveys?"} might require combining the technote reporting on the \gls{LSSTCam} observing campaign strategy,  Jira tickets recording the actual commands executed, and Slack threads where details were discussed.
+For example, a question such as \emph{``what observing strategy was adopted for the Rubin commissioning science validation surveys?"} might require combining the technote reporting on the \gls{LSSTCam} observing campaign strategy,  Jira tickets recording the actual commands executed, and Slack threads where details were discussed.
 No single platform contains the complete answer; a \gls{RAG} system searching across all three can assemble it.
 Similarly, ingesting the \gls{Simonyi Survey Telescope} troubleshooting guide from Confluence would allow night-time observers to query telescope faults in natural language during time-critical operations.
 Key reference documents such as the \gls{LSST} Science Book and the final telescope design document can likewise be made conversationally accessible, with answers traceable to their source.
@@ -53,7 +53,7 @@ Staff queries also present intrinsic retrieval challenges: technical vocabulary 
 \subsection{Supporting the science community}
 The Rubin \gls{RAG} virtual assistant is also designed to support the global science community in exploiting Rubin data products.
 The Rubin Early Science Program\cite{RTN-011} will release science-grade commissioning and early pre-survey data to support  community preparations for Rubin operations and enable high-impact science as early as possible.
-The first full \gls{LSST} data release, \gls{DR1}, is expected approximately two years after the start of survey operations.
+The first full \gls{LSST} Data Release, \gls{DR1}, is expected approximately two years after the start of survey operations.
 In the intervening period, a substantial volume of data will be made available through transient alerts, nightly processed images, and catalogs of single-epoch detections, as well as through the Data Preview program (DP1\cite{RTN-095}, DP2) in the period leading up to DR1.
 Each of these releases represents an opportunity for early scientific discovery with Rubin data.
 During this same period, the community will also be familiarizing itself with Rubin's data products, services, access tools, and the algorithms used to produce the data products.
@@ -196,7 +196,7 @@ The \gls{pipeline} consists of three main steps: loading and cleaning, chunking,
 The Rubin \gls{RAG} system ingests documents from the following sources:
 \begin{itemize}
   \item \textbf{Rubin technical documents}: Design documents, studies, reports, requirements specifications, and technical notes authored in a variety of formats including \LaTeX{}, reStructuredText, Markdown, and occasionally Word. Where the original source is available it is ingested directly; a rendered PDF is used only when no source format can be obtained.
-  \item \textbf{GitHub repositories}: Including the \gls{LSST} codebase and its documentation, Data \gls{Release} tutorials and documentation;
+  \item \textbf{GitHub repositories}: Including the \gls{LSST} codebase and its documentation, Data Release tutorials and documentation;
  \item \textbf{Jira tickets:} Technical project management and issue-tracking records containing design discussions, implementation decisions, and bug reports. Administrative and access-restricted tickets are excluded.  \item \textbf{Rubin Community Forum}: Discourse-based forum threads, including resolved support questions that represent practical knowledge and experience;
  \item \textbf{Confluence:} Selected internal wiki pages containing meeting notes, design discussions, and operational procedures. Access-restricted and private spaces are excluded from ingestion.
   \item \textbf{Slack channels:} Selected technical discussion channels containing decisions, troubleshooting conversations, and domain expertise relevant to operations and data processing. Private and administrative channels are excluded; and
