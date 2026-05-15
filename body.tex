@@ -231,8 +231,9 @@ Chunk size is a critical trade-off:
   \item Chunks that are \emph{too large} cause the query embedding and chunk embedding to diverge semantically, reducing retrieval precision and risking retrieval from the wrong part of the document.
 \end{itemize}
 
-We plan to evaluate several alternatives to the current character-based chunking strategy, including ``small-to-big" retrieval,\cite{LlamaIndex2024,Yang2023} which uses smaller chunks for precise retrieval while providing larger parent chunks to the LLM for generation. 
-This decouples the granularity used for retrieval from the context provided to the generator, addressing both failure modes simultaneously. 
+We plan to evaluate several alternatives to the current character-based chunking strategy, including hierarchical retrieval (also known as small-to-big or parent-child retrieval),\cite{LlamaIndex2024} in which large semantically coherent document chunks are split into smaller child chunks linked to their parent via unique identifiers.
+At query time, the smaller child chunks are matched against the query for precision, and the corresponding parent chunks are passed to the LLM for generation, combining the accuracy of fine-grained retrieval with the richer context needed for well-grounded answers.
+This decouples the granularity used for retrieval from the context provided to the generator, addressing both failure modes simultaneously.
 We also plan to evaluate semantic chunking,\cite{Kamradt2024} which detects topic boundaries by measuring embedding similarity between adjacent sentences rather than splitting at fixed character counts, an approach that has been shown to improve retrieval recall over fixed-size methods\cite{Smith2024}.
 Document-structure-aware and code-aware chunking, best practices now implemented in LangChain's specialized splitters,\cite{LangChain2023} use the inherent structure of source material to define chunk boundaries: section headers in technotes, function definitions in API documentation, and cell boundaries in Jupyter notebooks. 
 Cell-level chunking of notebooks is particularly important, as tutorial notebooks are among the most valuable sources for community users and each cell typically represents a self-contained, executable step in a scientific workflow that naive character-based splitting would break into unusable fragments.
