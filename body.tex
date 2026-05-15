@@ -31,7 +31,7 @@ RAG was selected over model fine-tuning because the core challenge is not how th
 
 % provisionally named \emph{Reva}\footnote{Reva: from ``Rubin Enhanced Virtual Astronomer'', and echoing the concepts of ``Retrieve'' + ``AI''.}
 Building on this framework, we are developing a \gls{RAG}-based virtual assistant designed to ground LLM responses in Rubin Observatory's knowledge bases, providing more accurate, current, and contextually relevant answers while reducing hallucinations.
-The goals are two-fold: to support Rubin project staff in rapidly and accurately retrieving information across the project's myriad platforms and formats; and to support the global Rubin science community in exploiting Rubin data products and services.
+The goals are two-fold: to support Rubin Observatory staff in rapidly and accurately retrieving information across the project's myriad platforms and formats; and to support the global Rubin science community in exploiting Rubin data products and services.
 This paper describes the motivation, architecture, and implementation of a prototype \gls{RAG} virtual assistant for Rubin Observatory, the lessons learned during its development, and future directions.
 
 % ============================================================================
@@ -39,7 +39,7 @@ This paper describes the motivation, architecture, and implementation of a proto
 \label{sec:motivation}
 
 \subsection{Supporting daily Rubin operations}
-Rubin project staff rely daily on a broad set of private collaboration resources, including Confluence wiki pages, Jira tickets, Slack discussions, Community Forum threads, proprietary documents, engineering drawings, and a long history of design documents in the internal \gls{DocuShare} archive.
+Rubin Observatory staff rely daily on a broad set of private collaboration resources, including Confluence wiki pages, Jira tickets, Slack discussions, Community Forum threads, proprietary documents, engineering drawings, and a long history of design documents in the internal \gls{DocuShare} archive.
 A \gls{RAG}-grounded virtual assistant that makes this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions from being made on the basis of outdated or superseded documents.
 Making this distributed and rapidly evolving body of knowledge searchable through a single conversational interface would significantly reduce the time staff spend locating information and help prevent operational decisions being made on the basis of outdated or superseded documents.
 A particular strength of \gls{RAG} in this context is its ability to synthesize information across platforms.
@@ -47,7 +47,7 @@ For example, a question such as \emph{``what observing strategy was adopted for 
 No single platform contains the complete answer; a \gls{RAG} system searching across all three can assemble it.
 Similarly, ingesting the \gls{Simonyi Survey Telescope} troubleshooting guide from Confluence would allow night-time observers to query telescope faults in natural language during time-critical operations.
 Key reference documents such as the \gls{LSST} Science Book and the final telescope design document can likewise be made conversationally accessible, with answers traceable to their source.
-The virtual assistant would also support onboarding of new project staff, who must rapidly absorb institutional knowledge scattered across over 20 years of archived discussions, technical notes, and design decisions.
+The virtual assistant would also support onboarding of new Observatory staff, who must rapidly absorb institutional knowledge scattered across over 20 years of archived discussions, technical notes, and design decisions.
 Staff queries also present intrinsic retrieval challenges: technical vocabulary is dense and context-dependent, and the same subsystem, component, or failure mode is frequently referred to by different names across platforms. Jira tickets, Confluence pages, and Slack threads each develop their own shorthand for the same concepts, requiring a retrieval system that matches on meaning rather than exact terms.
 
 \subsection{Supporting the science community}
