@@ -87,7 +87,7 @@ Figure~\ref{fig:architecture} shows the overall system architecture.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/rubin_rag_architecture.pdf}
-  \caption{Architecture of the Rubin \gls{RAG} virtual assistant showing the flow from document ingestion through embedding, vector storage, retrieval, and response generation. Documents from the Rubin knowledge base are loaded, chunked, and embedded using OpenAI's \texttt{text-embedding-3-large} model. Embeddings and text chunks are stored in the Weaviate vector database.
+  \caption{Architecture of the Rubin \gls{RAG} virtual assistant showing the flow from document ingestion through embedding, vector storage, retrieval, and response generation. Documents from the Rubin knowledge base are loaded, chunked, and embedded using OpenAI's \texttt{text-embedding-3-large} model. Embeddings and text chunks are stored in the Weaviate\cite{weaviate} vector database.
   At query time, a user query submitted via the Streamlit frontend is embedded using the same model; the top-$k$ most similar chunks are retrieved and injected into the LLM prompt to produce a grounded response. The system is deployed on the \gls{RSP} through the Phalanx infrastructure. (FIGURE WILL BE IMPROVED BEFOR SUBMISSION}
   \label{fig:architecture}
 \end{figure}
@@ -109,10 +109,10 @@ The following subsections describe the specific components selected for each sta
 \label{sec:weaviate}
  
 The retrieval stage depends on an efficient, searchable store of document embeddings.
-We use \href{https://weaviate.io}{Weaviate} as the vector database.
+We use \href{https://weaviate.io}{Weaviate} \cite{weaviate}as the vector database.
 Weaviate organizes data in ``collections'' that store text chunks, associated \gls{metadata} (source \gls{URL}, document identifier, page number, creation date), and their vector embeddings together.
 This co-location of vectors, text, and \gls{metadata} allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its \gls{provenance}.
-Weaviate was selected for its native integration with LangChain, its support for multiple vectorization backends, its native hybrid search capability combining dense vector and sparse keyword search, and its suitability for deployment on \gls{Kubernetes}.
+Weaviate was selected for its native integration with LangChain\cite{langchain}, its support for multiple vectorization backends, its native hybrid search capability combining dense vector and sparse keyword search, and its suitability for deployment on \gls{Kubernetes}.
  
 \subsection{Retrieval and generation: embedding and generative models}
 \label{sec:llm}
