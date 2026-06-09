@@ -11,28 +11,28 @@ The challenge is compounded by the scale of the Rubin science community itself: 
 Rubin's approach to community science instead focuses on fostering a vibrant community supported by infrastructure such as the Discourse-based Rubin Community Forum, to crowdsource solutions and build a deep reservoir of shared expertise\cite{RTN-121}.
 
 Large language models (LLMs) offer a promising approach to this information-discovery challenge.
-Their ability to understand and generate natural language makes them well suited to serving as an intelligent interface to large, heterogeneous documentation ecosystems, allowing users to find information through conversation without needing to know where each piece of information resides.
-However, LLMs face fundamental limitations when applied to domain-specific questions about Rubin Observatory.
-LLMs compress vast amounts of knowledge during training into their weights, but this encoded knowledge is \emph{static}: it cannot be updated as new information becomes available, and models can already be outdated by the time they are released.
-Because LLMs are trained on broad corpora, they often lack the \emph{domain-specific} knowledge needed to answer questions about Rubin's data products, the \gls{RSP}, or the \gls{LSST} science pipelines \cite{PSTN-019}, and may generate plausible but factually incorrect responses, a phenomenon known as \emph{hallucination}.
-Furthermore, much of the information critical to Rubin operations and science resides on internal or proprietary systems, making it entirely inaccessible to general-purpose models regardless of their training.
+LLMs are language models trained on large datasets capable of performing a variety of text- and language-related tasks.
+Those that generate novel text in response to a user prompt are called \emph{generative} LLMs; those that encode text into a semantic vector space are called \emph{embedding} models.
+Their ability to understand and generate natural language makes generative LLMs well suited to serving as an intelligent interface to large, heterogeneous documentation ecosystems, allowing users to find information through conversation without needing to know where each piece of information resides.
+However, both classes of model face fundamental limitations when applied to domain-specific questions about Rubin Observatory.
+The knowledge encoded in model weights during training is \emph{static}: it cannot be updated as new information becomes available, and models may already be outdated by the time they are released.
+Because this training draws on broad general corpora, models often lack the \emph{domain-specific} knowledge needed to answer questions about Rubin's data products, the \gls{RSP}, or the \gls{LSST} science pipelines~\cite{PSTN-019}, and generative models may produce plausible but factually incorrect responses, a phenomenon known as \emph{hallucination}.
+Furthermore, much of the information critical to Rubin operations and science resides on internal or proprietary systems, making it entirely inaccessible to general-purpose models.
 
-The domain itself presents additional retrieval challenges that affect the full information-discovery pipeline for both observatory staff and the science community. 
-Astrophysical vocabulary is dense and highly specialized, and the relevance of a concept often depends strongly on context. 
-Terms such as ``AGN feedback,'' ``SMBH accretion,'' ``halo quenching,'' and ``Type~Ia progenitor channels'' refer to distinct physical processes, yet in the context of a query about how compact objects influence galaxy evolution, all may be highly relevant despite sharing little direct keyword overlap. 
-Mathematical symbols and equations also carry semantic weight that general-purpose retrieval systems may not fully capture. 
-In the Rubin context these challenges are compounded by observatory-specific terminology in which common English words carry precise technical meanings e.g., ``Butler'' as a data access framework, ``tract'' and ``patch'' as sky tiling units,  and by a knowledge base spanning staff operations, engineering, and science across dozens of platforms.
+The domain itself presents additional retrieval challenges that affect the full information-discovery pipeline for both observatory staff and the science community.
+Astrophysical vocabulary is dense and highly specialized, and the relevance of a concept often depends strongly on context.
+Terms such as ``AGN feedback,'' ``SMBH accretion,'' ``halo quenching,'' and ``Type~Ia progenitor channels'' refer to distinct physical processes, yet in the context of a query about how compact objects influence galaxy evolution, all may be highly relevant despite sharing little direct keyword overlap.
+Mathematical symbols and equations carry semantic weight that general-purpose retrieval systems may not fully capture.
+In the Rubin context, these challenges are compounded by observatory-specific terminology in which common English words carry precise technical meanings (e.g., ``Butler'' as a data access framework, ``tract'' and ``patch'' as sky tiling units) and by a knowledge base spanning staff operations, engineering, and science across dozens of platforms.
 
-Retrieval-Augmented Generation (RAG) was introduced by Lewis et al.\cite{NEURIPS2020_6b493230} to address precisely these limitations.
-Their key insight was that LLMs possess a form of implicit, \emph{parametric} memory, that is, knowledge encoded in the model's weights during training, but that this memory is fixed and cannot account for information absent from the training corpus.
-By combining this parametric memory with an explicit, \emph{non-parametric} memory in the form of a searchable document index, and fetching relevant passages from that index at query time, \gls{RAG} enables an LLM to generate responses grounded in specific, up-to-date context rather than relying solely on its compressed internal knowledge.
-This hybrid approach was shown to significantly improve factual accuracy on knowledge-intensive tasks compared to a standalone LLM\cite{NEURIPS2020_6b493230}. 
-RAG was selected over model fine-tuning because the core challenge is not how the model responds but what information it can access, and because the knowledge base must evolve across data releases without expensive retraining\cite{RAGvsFT}.
+Retrieval-Augmented Generation (RAG) directly addresses both the staleness and accessibility limitations of standalone LLMs by pairing a generative model with an external, searchable data source from which relevant passages are fetched at query time, grounding responses in specific, current information rather than the model's internal approximations.
+RAG was introduced by Lewis et al.~\cite{NEURIPS2020_6b493230} to formalize this approach: their key insight was that LLMs possess implicit \emph{parametric} memory encoded in model weights, but that combining it with explicit \emph{non-parametric} memory in the form of a searchable document index significantly improves factual accuracy on knowledge-intensive tasks.
+RAG was selected for this application over model fine-tuning because the core challenge is not how the model responds but what information it can access, and 
+because Rubin's knowledge base must evolve across data releases without expensive retraining~\cite{RAGvsFT}.
 
-% provisionally named \emph{Reva}\footnote{Reva: from ``Rubin Enhanced Virtual Astronomer'', and echoing the concepts of ``Retrieve'' + ``AI''.}
-Building on this framework, we are developing a \gls{RAG}-based virtual assistant designed to ground LLM responses in Rubin Observatory's knowledge bases, providing more accurate, current, and contextually relevant answers while reducing hallucinations.
-The goals are two-fold: to support Rubin Observatory staff in rapidly and accurately retrieving information across the project's myriad platforms and formats; and to support the global Rubin science community in exploiting Rubin data products and services.
-This paper describes the motivation, architecture, and implementation of a prototype \gls{RAG} virtual assistant for Rubin Observatory, the lessons learned during its development, and future directions.
+In this paper we present a \gls{RAG}-based virtual assistant designed to ground LLM responses in Rubin Observatory's knowledge bases, providing accurate, current, and contextually relevant answers while reducing hallucinations.
+The system targets two complementary user populations: Rubin Observatory staff who need to rapidly locate information across the project's myriad platforms and formats, and the global Rubin science community who need guidance on exploiting Rubin data products and services.
+We describe the motivation, architecture, and implementation of a prototype system, the lessons learned during its development, and future directions.
 
 % ============================================================================
 \section{Motivation and Use Cases}
@@ -109,7 +109,8 @@ The following subsections describe the specific components selected for each sta
 \label{sec:weaviate}
  
 The retrieval stage depends on an efficient, searchable store of document embeddings.
-We use \href{https://weaviate.io}{Weaviate} \cite{weaviate}as the vector database.
+We use \href{https://weaviate.io}{Weaviate}~\cite{weaviate} as the vector database.
+Weaviate is built around vector embeddings as the primary data type, with storage layout and query planning designed for approximate nearest neighbor search over high-dimensional spaces; embedding models are integrated at the data layer, so vectors are generated and indexed at ingest rather than as a post-processing step.
 Weaviate organizes data in ``collections'' that store text chunks, associated \gls{metadata} (source \gls{URL}, document identifier, page number, creation date), and their vector embeddings together.
 This co-location of vectors, text, and \gls{metadata} allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its \gls{provenance}.
 Weaviate was selected for its native integration with LangChain\cite{langchain}, its support for multiple vectorization backends, its native hybrid search capability combining dense vector and sparse keyword search, and its suitability for deployment on \gls{Kubernetes}.
