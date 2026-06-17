@@ -1,7 +1,7 @@
 \section{Introduction}
 \label{sec:intro}
 The NSF-DOE Vera C. Rubin Observatory\cite{2019ApJ...873..111I}, located at an elevation of 2647\,m on Cerro Pach\'{o}n in Chile, is a large-aperture, wide-field optical observatory whose prime mission is to conduct the 10-year \gls{LSST}, beginning in 2026.
-The \gls{LSST} will repeatedly image approximately 18,000 square degrees of sky every three nights using a 3.2-gigapixel \gls{camera} mounted on the 8.4-meter \gls{Simonyi Survey Telescope}.
+The \gls{LSST} will repeatedly image approximately 18,000 square degrees of sky every three nights using a 3.2-gigapixel camera mounted on the 8.4-meter \gls{Simonyi Survey Telescope}.
 Each night, Rubin will generate 15--20\,TB of raw data from which it will issue approximately 10 million \gls{transient} alerts.
 Over its lifetime, the \gls{LSST} is expected to catalog approximately 20 billion galaxies and 17 billion stars, producing a final catalog of approximately 15\,PB and roughly 500\,PB of image products across several major data releases, each accompanied by updated documentation, data product definitions, and software.
 
@@ -167,17 +167,17 @@ The Phalanx-based deployment model means that the virtual assistant's \gls{confi
  
 From the outset, the RAG virtual assistant was designed to be deployed as a service within the \gls{RSP}, following the same model used for all other RSP services, at both the user-facing cloud RSP\footnote{\url{https://data.lsst.cloud}} and the on-premises United States Data Facility (USDF) at SLAC National Accelerator Laboratory\cite{2024ASPC..535..227O}.
 
-The \gls{LSST} will accumulate approximately 50\,\gls{PB} of data products by the end of year~1, growing to roughly 500\,\gls{PB} by year~10; far too large for users to download and analyse locally.
-The \gls{RSP} is Rubin's answer to this challenge, providing \gls{cloud}-based access to \gls{LSST} data products and services through three interfaces: the Portal (browser-based data discovery), Notebooks (Jupyter-based analysis), and Web APIs (programmatic access via Virtual Observatory interfaces).
+The \gls{LSST} will accumulate approximately 50\,PB of data products by the end of year~1, growing to roughly 500\,PB by year~10; far too large for users to download and analyse locally.
+The \gls{RSP} is Rubin's answer to this challenge, providing cloud-based access to \gls{LSST} data products and services through three interfaces: the Portal (browser-based data discovery), Notebooks (Jupyter-based analysis), and Web APIs (programmatic access via Virtual Observatory interfaces).
 Deploying the virtual assistant within this same infrastructure provides several important advantages:
 
 \noindent\textbf{Co-location with the data}: Users interact with the virtual assistant in the same environment where they access and analyze \gls{LSST} data products, enabling a tightly integrated workflow in which documentation assistance and data analysis are available side by side.
 
 \noindent\textbf{Shared authentication and access control}: The virtual assistant inherits the RSP's identity management and access control infrastructure, ensuring that private or restricted resources are accessible only to authorized users without requiring separate login.
 
-\noindent\textbf{Operational \gls{monitoring}}: The virtual assistant benefits from Rubin's existing service \gls{monitoring} and alerting infrastructure, reducing the operational burden of running an additional service.
+\noindent\textbf{Operational monitoring}: The virtual assistant benefits from Rubin's existing service monitoring and alerting infrastructure, reducing the operational burden of running an additional service.
 
-\noindent\textbf{Dual-environment coverage}: Deployment at both the \gls{cloud} RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
+\noindent\textbf{Dual-environment coverage}: Deployment at both the cloud RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
 
 \subsection{Codebase}
 \label{sec:codebase}
@@ -192,8 +192,8 @@ The project is released under the MIT license.
 \section{Data Ingestion Pipeline}
 \label{sec:ingestion}
 
-The data ingestion \gls{pipeline} transforms raw documents from diverse sources into vector embeddings stored in Weaviate, ready for retrieval.
-The \gls{pipeline} consists of three main steps: loading and cleaning, chunking, and embedding.
+The data ingestion pipeline transforms raw documents from diverse sources into vector embeddings stored in Weaviate, ready for retrieval.
+The pipeline consists of three main steps: loading and cleaning, chunking, and embedding.
 
 \subsection{Data Sources}
 
@@ -216,9 +216,9 @@ For GitHub repositories we use the \texttt{GithubFileLoader}, which retrieves fi
 In both cases the result is a list of LangChain \texttt{Document} objects containing extracted text and \gls{metadata}, ready for downstream chunking and embedding.
 
 Several areas for improvement have been identified.
-The current \gls{pipeline} loses information encoded in figures and diagrams, which are prevalent in Rubin documentation; vision-language models could generate text descriptions of these for embedding, making visual content searchable.
-For scanned documents and image-based PDFs, particularly prevalent in the \gls{DocuShare} legacy archive where non-\gls{PDF} source formats are often unavailable, we are evaluating OCR and multimodal extraction techniques to recover text that standard \gls{PDF} parsers cannot access.
-Where source formats are available, we ingest them directly: \gls{LaTeX} technotes are parsed from their \gls{LaTeX} source rather than from rendered PDFs, and Markdown and reStructuredText documents handle tabular content reliably without the extraction issues that affect \gls{PDF} tables.
+The current pipeline loses information encoded in figures and diagrams, which are prevalent in Rubin documentation; vision-language models could generate text descriptions of these for embedding, making visual content searchable.
+For scanned documents and image-based PDFs, particularly prevalent in the \gls{DocuShare} legacy archive where non-PDF source formats are often unavailable, we are evaluating OCR and multimodal extraction techniques to recover text that standard PDF parsers cannot access.
+Where source formats are available, we ingest them directly: LaTeX technotes are parsed from their LaTeX source rather than from rendered PDFs, and Markdown and reStructuredText documents handle tabular content reliably without the extraction issues that affect PDF tables.
 For conversational sources such as the Community Forum, Jira, and Slack, raw ingestion produces noisy content mixing resolved answers with tangential discussion; extracting clean, structured records, such as resolved question-answer pairs from forum threads or decision records from Jira tickets, would substantially improve retrieval quality.
 For Jira in particular, distinguishing currently relevant tickets from obsolete ones is an open challenge; approaches under consideration include filtering by ticket status and recency, weighting by activity level, and applying time-decay factors during retrieval so that older, unresolved tickets are ranked lower than recent, resolved ones.
 Finally, as the corpus grows, deduplication across sources becomes important: the same information often appears in a Jira ticket, a Confluence page, and a technote, and retrieving contradictory versions of the same content degrades response quality
@@ -245,7 +245,7 @@ Cell-level chunking of notebooks is particularly important, as tutorial notebook
 \subsection{Embedding}
 %
 After chunking, documents are embedded using the OpenAI \texttt{text-embedding-3-large} model via LangChain's \texttt{WeaviateVectorStore}, which creates and populates the corresponding Weaviate collections. 
-Each collection stores the chunk text, associated \gls{metadata}, and vector embedding together, enabling efficient similarity search at query time.
+Each collection stores the chunk text, associated metadata, and vector embedding together, enabling efficient similarity search at query time.
 The \texttt{text-embedding-3-large} model is well suited to the semantic retrieval requirements of this application, particularly for heterogeneous scientific and technical text \cite{openai2024embeddings}. 
 The same embedding model is used both during document ingestion and at query time, ensuring that documents and user queries are represented within a shared semantic vector space.
 
@@ -301,7 +301,7 @@ Running each query with and without retrieval enabled quantifies the improvement
  
 For automated evaluation, we use the \href{https://docs.ragas.io/}{RAGAS} framework \cite{Es2023}, an open-source toolkit that provides reference-free metrics specifically designed for RAG systems.
 RAGAS evaluates system quality along four axes: \emph{faithfulness}, \emph{answer relevancy}, \emph{context precision}, and \emph{context recall}.
-Together these cover both the retrieval and generation stages of the \gls{pipeline}, allowing failures to be attributed to the appropriate stage.
+Together these cover both the retrieval and generation stages of the pipeline, allowing failures to be attributed to the appropriate stage.
  RAGAS also supports the definition of custom metrics, enabling domain-specific evaluation criteria to be added alongside the built-in ones.
 For Rubin, this opens the possibility of metrics that verify whether a response correctly identifies the relevant data product, uses valid catalog column names, or produces syntactically correct \gls{ADQL} queries---aspects of correctness that general-purpose metrics cannot assess.
  
@@ -309,7 +309,7 @@ For Rubin, this opens the possibility of metrics that verify whether a response 
 \label{sec:performance}
  
 Initial qualitative evaluation indicates that response quality does not yet meet the standard required for community deployment.
-While the core \gls{pipeline} is functional, preliminary assessment suggests that degradation arises from multiple interacting sources across the full \gls{pipeline} rather than any single bottleneck; systematic measurement using the RAGAS framework against the validation query set is planned.
+While the core pipeline is functional, preliminary assessment suggests that degradation arises from multiple interacting sources across the full pipeline rather than any single bottleneck; systematic measurement using the RAGAS framework against the validation query set is planned.
  
 On the \emph{retrieval} side, the current fixed-size chunking strategy produces chunks that frequently split relevant context across boundaries, reducing context recall; the small-to-big and semantic chunking strategies described in Section~\ref{sec:chunking} are being evaluated as alternatives.
 The inherent challenges of astrophysics and observatory retrieval, including vocabulary variation, context-dependent terminology, and dense technical language, also contribute; improvements here are being pursued through chunking strategy, hybrid retrieval, and corpus quality.
@@ -352,21 +352,21 @@ Evaluating alternative LLM backends, including more recent OpenAI models, Anthro
 Adopting a different LLM may also require a corresponding change of embedding model: Anthropic recommends VoyageAI embeddings for use with Claude, and VoyageAI models are strong on scientific and technical documents, code, and the preservation of semantic relationships in complex, specialized terminology, making them a natural candidate if the system moves to a Claude-based backend.
  
 \item\textbf{Corpus expansion and automation.}
-Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion \gls{pipeline} with update triggers linked to source platforms (GitHub webhooks, \gls{API} polling for Jira and Confluence, Slack channel ingestion).
+Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion pipeline with update triggers linked to source platforms (GitHub webhooks, \gls{API} polling for Jira and Confluence, Slack channel ingestion).
  
 \item\textbf{Productizing.}
-Transitioning from prototype to a production-quality service with robust \gls{monitoring}, logging, usage analytics, and automatic re-ingestion of updated and new data sources.
+Transitioning from prototype to a production-quality service with robust monitoring, logging, usage analytics, and automatic re-ingestion of updated and new data sources.
 
 \end{itemize}
 
 \subsection{Towards agentic RAG}
 \label{sec:agentic_rag}
  
-The current prototype follows a fixed \gls{pipeline}: each query passes through retrieval, augmentation, and generation in a single pass without the ability to iterate, reformulate queries, or decompose complex multi-step questions.
+The current prototype follows a fixed pipeline: each query passes through retrieval, augmentation, and generation in a single pass without the ability to iterate, reformulate queries, or decompose complex multi-step questions.
 This limits effectiveness on queries that require reasoning across multiple sources or iterative refinement of a response.
  
 Agentic \gls{RAG} represents a natural evolution by introducing an explicit control layer that coordinates how the system reasons over external context.
-Rather than following a fixed \gls{pipeline}, an agentic system can dynamically decide which collections to search, validate retrieved information for consistency, reformulate queries when initial retrieval is insufficient, invoke external tools, and iteratively refine responses.
+Rather than following a fixed pipeline, an agentic system can dynamically decide which collections to search, validate retrieved information for consistency, reformulate queries when initial retrieval is insufficient, invoke external tools, and iteratively refine responses.
  
 These capabilities are well suited to the most ambitious Rubin use cases described in Section~\ref{sec:motivation}: \gls{schema}-aware query construction that verifies column names against the current catalog \gls{schema}; tutorial-guided science workflows that assemble multi-step code examples from different sources; and cross-platform synthesis that combines information from technotes, Jira tickets, and forum posts into a coherent answer.
 We plan to investigate agentic \gls{RAG} architectures as the system matures beyond the current prototype.
@@ -377,7 +377,7 @@ We plan to investigate agentic \gls{RAG} architectures as the system matures bey
  
 We have presented the design and implementation of a \gls{RAG}-based virtual assistant for information discovery at the Vera C. Rubin Observatory, deployed as a service on the \gls{RSP}.
 The system addresses a real operational need: enabling both Rubin  Observatory staff and the Rubin science community to efficiently locate accurate information across a large, fragmented, and continuously evolving documentation ecosystem.
-The prototype is functional and deployed on the RSP at both the \gls{cloud}-based US \gls{Data Access Center} and the on-premise USDF at SLAC, and is being prepared to support the community during the Early Science period.
+The prototype is functional and deployed on the RSP at both the \gls{cloud}-based US Data Access Center and the on-premise USDF at SLAC, and is being prepared to support the community during the Early Science period.
 As the \gls{LSST} survey progresses and both data volume and documentation grow across successive releases, the importance of this capability will only increase.
 Rather than a static documentation virtual assistant, a value proposition that has eroded as general-purpose LLMs have become web-connected, the longer-term vision is a science enablement assistant that helps users go from a science question to working code against real Rubin data, grounded in authoritative and current sources.
 The \gls{RAG} value is not in knowing what the documentation says; it is in knowing which specific \gls{API} call, column name, or query pattern will actually work on the current data release.
