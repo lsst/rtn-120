@@ -2,7 +2,7 @@
 \label{sec:intro}
 The NSF-DOE Vera C. Rubin Observatory\cite{2019ApJ...873..111I}, located at an elevation of 2647\,m on Cerro Pach\'{o}n in Chile, is a large-aperture, wide-field optical observatory whose prime mission is to conduct the 10-year \gls{LSST}, beginning in 2026.
 The \gls{LSST} will repeatedly image approximately 18,000 square degrees of sky every three nights using a 3.2-gigapixel \gls{camera} mounted on the 8.4-meter \gls{Simonyi Survey Telescope}.
-Each night, Rubin will generate 15--20\,\gls{TB} of raw data from which it will issue approximately 10 million \gls{transient} alerts.
+Each night, Rubin will generate 15--20\,TB of raw data from which it will issue approximately 10 million \gls{transient} alerts.
 Over its lifetime, the \gls{LSST} is expected to catalog approximately 20 billion galaxies and 17 billion stars, producing a final catalog of approximately 15\,PB and roughly 500\,PB of image products across several major data releases, each accompanied by updated documentation, data product definitions, and software.
 
 This scientific output is accompanied by an extensive body of supporting documentation, including technical notes, design documents, operational guides, data product definitions, software documentation, and community-facing tutorials, distributed across a wide variety of platforms: Confluence wikis, Jira tickets, GitHub repositories, the Rubin Community Forum\footnote{\url{https://community.lsst.org}}, Slack discussions, \gls{DocuShare} archives, and numerous PDF reports.
@@ -25,8 +25,8 @@ Terms such as ``AGN feedback,'' ``SMBH accretion,'' ``halo quenching,'' and ``Ty
 Mathematical symbols and equations carry semantic weight that general-purpose retrieval systems may not fully capture.
 In the Rubin context, these challenges are compounded by observatory-specific terminology in which common English words carry precise technical meanings (e.g., ``Butler'' as a data access framework, ``tract'' and ``patch'' as sky tiling units) and by a knowledge base spanning staff operations, engineering, and science across dozens of platforms.
 
-Retrieval-Augmented Generation (RAG) directly addresses both the staleness and accessibility limitations of standalone LLMs by pairing a generative model with an external, searchable data source from which relevant passages are fetched at query time, grounding responses in specific, current information rather than the model's internal approximations.
-RAG was introduced by Lewis et al.~\cite{NEURIPS2020_6b493230} to formalize this approach: their key insight was that LLMs possess implicit \emph{parametric} memory encoded in model weights, but that combining it with explicit \emph{non-parametric} memory in the form of a searchable document index significantly improves factual accuracy on knowledge-intensive tasks.
+\gls{RAG} directly addresses both the staleness and accessibility limitations of standalone LLMs by pairing a generative model with an external, searchable data source from which relevant passages are fetched at query time, grounding responses in specific, current information rather than the model's internal approximations.
+\gls{RAG} was introduced by Lewis et al.~\cite{NEURIPS2020_6b493230} to formalize this approach: their key insight was that LLMs possess implicit \emph{parametric} memory encoded in model weights, but that combining it with explicit \emph{non-parametric} memory in the form of a searchable document index significantly improves factual accuracy on knowledge-intensive tasks.
 RAG was selected for this application over model fine-tuning because the core challenge is not how the model responds but what information it can access, and 
 because Rubin's knowledge base must evolve across data releases without expensive retraining~\cite{RAGvsFT}.
 
@@ -54,7 +54,7 @@ Staff queries also present intrinsic retrieval challenges: technical vocabulary 
 The Rubin \gls{RAG} virtual assistant is also designed to support the global science community in exploiting Rubin data products.
 The Rubin Early Science Program\cite{RTN-011} will release science-grade commissioning and early pre-survey data to support  community preparations for Rubin operations and enable high-impact science as early as possible.
 The first full \gls{LSST} Data Release, \gls{DR1}, is expected approximately two years after the start of survey operations.
-In the intervening period, a substantial volume of data will be made available through transient alerts, nightly processed images, and catalogs of single-epoch detections, as well as through the Data Preview program (DP1\cite{RTN-095}, DP2) in the period leading up to DR1.
+In the intervening period, a substantial volume of data will be made available through transient alerts, nightly processed images, and catalogs of single-epoch detections, as well as through the Data Preview program (\gls{DP1}\cite{RTN-095}, \gls{DP2}) in the period leading up to \gls{DR1}.
 Each of these releases represents an opportunity for early scientific discovery with Rubin data.
 During this same period, the community will also be familiarizing itself with Rubin's data products, services, access tools, and the algorithms used to produce the data products.
 A virtual assistant grounded in authoritative, up-to-date Rubin documentation can lower the barrier to entry, help users navigate unfamiliar systems, and accelerate the path from data access to scientific results.
