@@ -229,11 +229,9 @@ Finally, as the corpus grows, deduplication across sources becomes important: th
 Loaded documents are split into chunks using LangChain's \texttt{RecursiveCharacterTextSplitter}, which divides text by character count while preferring to split at paragraph breaks, then line breaks, then sentence boundaries.
 The current prototype uses a chunk size of 1000 characters with an overlap of 50 characters between adjacent chunks.
 
-Chunk size is a critical trade-off:
-\begin{itemize}
-  \item Chunks that are \emph{too small} may lack sufficient context for the LLM to generate a meaningful answer, even when the correct passage is retrieved.
-  \item Chunks that are \emph{too large} cause the query embedding and chunk embedding to diverge semantically, reducing retrieval precision and risking retrieval from the wrong part of the document.
-\end{itemize}
+Chunk size represents a critical trade-off. 
+Chunks that are \emph{too small} may not contain enough context for the LLM to generate a meaningful answer, even when the correct passage is successfully retrieved. 
+Conversely, chunks that are \emph{too large} can cause the query embedding and chunk embedding to diverge semantically, reducing retrieval precision and increasing the likelihood of retrieving content from the wrong part of the document.
 
 We plan to evaluate several alternatives to the current character-based chunking strategy, including hierarchical retrieval (also known as small-to-big or parent-child retrieval),\cite{LlamaIndex2024} in which large semantically coherent document chunks are split into smaller child chunks linked to their parent via unique identifiers.
 At query time, the smaller child chunks are matched against the query for precision, and the corresponding parent chunks are passed to the LLM for generation, combining the accuracy of fine-grained retrieval with the richer context needed for well-grounded answers.
