@@ -61,9 +61,9 @@ A virtual assistant grounded in authoritative, up-to-date Rubin documentation ca
 
 The eventual goal is for the Rubin virtual assistant to answer technical questions and provide at least beginner-level coding assistance for working with the \gls{LSST} Science Pipelines.
 A key challenge for users will be navigating the Rubin data model\cite{LSE-163}, which comprises hundreds of columns across multiple catalog tables with Rubin-specific naming conventions, and constructing correct and efficient ADQL/TAP queries.
-For example, a user asking \emph{``how do I select clean galaxy samples from the Object table?''} needs to know which flag columns to filter on to exclude objects with unreliable shape or light profile modeling, and how to apply signal-to-noise cuts to retain only well-detected galaxies. These column names are specific to Rubin and may change between data releases; a general-purpose LLM may hallucinate plausible but incorrect names, while a \gls{RAG} system grounded in the current \gls{schema} helps mitigate this risk.
+For example, a user asking \emph{``how do I select clean galaxy samples from the Object table?''} needs to know which flag columns to filter on to exclude objects with unreliable shape or light profile modeling, and how to apply signal-to-noise cuts to retain only well-detected galaxies. These column names are specific to Rubin and may change between data releases; a general-purpose LLM may hallucinate plausible but incorrect names, while a \gls{RAG} system grounded in the current schema helps mitigate this risk.
 Similarly, a question such as \emph{``how do I retrieve the coadded images for the ECDFS field from DP1?"} requires knowing the correct Butler\cite{2022SPIE12189E..11J} collection name, the filter designations available in DP1, and the current Butler API syntax, all details that may change between releases and are absent from general LLM training data.
-A \gls{RAG} system grounded in the \gls{schema} documentation, data product definitions, and worked examples from tutorials and Community Forum posts can provide reliable, validated guidance that a general-purpose LLM cannot.
+A \gls{RAG} system grounded in the schema documentation, data product definitions, and worked examples from tutorials and Community Forum posts can provide reliable, validated guidance that a general-purpose LLM cannot.
 The Community Forum is a particularly valuable knowledge source: a user encountering an error running a tutorial notebook may find that the identical problem was already resolved on the Forum; the virtual assistant can surface that answer directly rather than requiring the user to search the Forum manually.
 
 \subsection{Documentation validation}
@@ -72,7 +72,7 @@ By creating a standard suite of prompts and systematically querying the virtual 
 If the virtual assistant cannot answer a question that should be answerable, this signals a documentation gap.
 If it produces an incorrect answer, this may indicate ambiguous or contradictory source material.
 For example, testing whether the virtual assistant correctly reports which filters are available in \gls{DP1}, a subset of the full \textit{ugrizy} set, can reveal whether the documentation clearly distinguishes \gls{DP1}-specific content from general \gls{LSST} descriptions.
-The approach can also detect whether tutorial notebooks reference deprecated API calls that no longer work against the current \gls{software} \gls{stack}, or whether documented Butler collection names match the collections actually deployed on the RSP.
+The approach can also detect whether tutorial notebooks reference deprecated API calls that no longer work against the current software stack, or whether documented Butler collection names match the collections actually deployed on the RSP.
 Rubin's Community Science Team has already explored using \href{https://vale.sh}{Vale} for automated style verification of user-facing documentation; the virtual assistant provides a complementary, content-level validation approach.
 %
 % ============================================================================
@@ -97,13 +97,12 @@ Figure~\ref{fig:architecture} shows the overall system architecture.
 
 The three words in Retrieval-Augmented Generation describe the three stages of the system:
 
-\noindent\textbf{Retrieval:} Given a user query, the system searches an external knowledge base to find the most relevant document fragments. The user's query is converted into a vector embedding and compared against stored document embeddings using cosine similarity to identify the top-$k$ most semantically relevant chunks. 
+\begin{itemize}
+\item\textbf{Retrieval:} Given a user query, the system searches an external knowledge base to find the most relevant document fragments. The user's query is converted into a vector embedding and compared against stored document embeddings using cosine similarity to identify the top-$k$ most semantically relevant chunks. 
+\item\textbf{Augmentation:} The retrieved chunks are assembled into a structured context block and combined with the original user query to form an augmented prompt. A system prompt instructs the LLM to base its answer on the provided context and to indicate when the available documentation does not contain sufficient information, rather than generating a speculative response. This augmentation step is what distinguishes \gls{RAG} from a standard LLM interaction: the model receives domain-specific context alongside the question.
+\item\textbf{Generation:} The augmented prompt is passed to a generative LLM, which produces a natural language response conditioned on both the user's question and the retrieved context. Because the response is grounded in specific, retrieved documents rather than the model's compressed parametric knowledge alone, the output is more factually accurate and traceable to its sources.
+\end{itemize}
 
-\noindent\textbf{Augmentation:} The retrieved chunks are assembled into a structured context block and combined with the original user query to form an augmented prompt. A system prompt instructs the LLM to base its answer on the provided context and to indicate when the available documentation does not contain sufficient information, rather than generating a speculative response. This augmentation step is what distinguishes \gls{RAG} from a standard LLM interaction: the model receives domain-specific context alongside the question.
-
-\noindent\textbf{Generation:} The augmented prompt is passed to a generative LLM, which produces a natural language response conditioned on both the user's question and the retrieved context. Because the response is grounded in specific, retrieved documents rather than the model's compressed parametric knowledge alone, the output is more factually accurate and traceable to its sources.
-
-\noindent
 The following subsections describe the specific components selected for each stage, together with the frontend, deployment infrastructure, and platform integration that connect them into a working service.
  
 \subsection{Retrieval: Weaviate vector database}
@@ -112,8 +111,8 @@ The following subsections describe the specific components selected for each sta
 The retrieval stage depends on an efficient, searchable store of document embeddings.
 We use \href{https://weaviate.io}{Weaviate}~\cite{weaviate} as the vector database.
 Weaviate is built around vector embeddings as the primary data type, with storage layout and query planning designed for approximate nearest neighbor search over high-dimensional spaces; embedding models are integrated at the data layer, so vectors are generated and indexed at ingest rather than as a post-processing step.
-Weaviate organizes data in ``collections'' that store text chunks, associated \gls{metadata} (source \gls{URL}, document identifier, page number, creation date), and their vector embeddings together.
-This co-location of vectors, text, and \gls{metadata} allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its \gls{provenance}.
+Weaviate organizes data in ``collections'' that store text chunks, associated metadata (source URL, document identifier, page number, creation date), and their vector embeddings together.
+This co-location of vectors, text, and metadata allows the retrieval component to efficiently compare the vector embedding of a user query against the stored embeddings using cosine similarity, and to return both the matching text and its provenance.
 Weaviate was selected for its native integration with LangChain\cite{langchain}, its support for multiple vectorization backends, its native hybrid search capability combining dense vector and sparse keyword search, and its suitability for deployment on \gls{Kubernetes}.
  
 \subsection{Retrieval and generation: embedding and generative models}
@@ -123,7 +122,7 @@ The system uses two separate OpenAI models serving distinct roles in the retriev
 The \texttt{text-embedding-3-large} model is used as the \emph{vectorizer} in the retrieval stage, converting both document chunks and user queries into high-dimensional vector representations that capture semantic meaning.
 The same embedding model is used at ingestion time and at query time, ensuring that documents and queries occupy the same vector space and that similarity comparisons are meaningful.
 The \texttt{gpt-3.5-turbo} model serves as the \emph{generative LLM} in the generation stage, producing natural language responses based on the augmented prompt containing the user's query and the retrieved context.
-Both models are accessed via the OpenAI \gls{API} through keys provided to the Weaviate client and LangChain.
+Both models are accessed via the OpenAI API through keys provided to the Weaviate client and LangChain.
  
 % TODO: Update model versions if upgraded by time of publication.
  
@@ -134,8 +133,8 @@ We plan to benchmark alternative LLMs including more recent OpenAI models, Anthr
 \label{sec:langchain}
  
 \href{https://www.langchain.com}{LangChain} is an open-source Python library that provides the integration layer connecting all three \gls{RAG} stages.
-During ingestion, LangChain manages the document loading, chunking, and embedding \gls{pipeline} that populates the Weaviate vector store (Section~\ref{sec:ingestion}).
-At query time, LangChain orchestrates the full \gls{RAG} \gls{cycle}: embedding the user query, retrieving relevant chunks from Weaviate, constructing the augmented prompt with retrieved context, and routing the augmented prompt to the generative LLM.
+During ingestion, LangChain manages the document loading, chunking, and embedding pipeline that populates the Weaviate vector store (Section~\ref{sec:ingestion}).
+At query time, LangChain orchestrates the full \gls{RAG} cycle: embedding the user query, retrieving relevant chunks from Weaviate, constructing the augmented prompt with retrieved context, and routing the augmented prompt to the generative LLM.
 Its modular design allows individual components, including loaders, splitters, embedding models, vector stores, and LLMs, to be swapped independently, which has been essential for the iterative experimentation and optimization described in Section~\ref{sec:future}.
  
 \subsection{Frontend: Streamlit}
@@ -157,10 +156,10 @@ Figure~\ref{fig:rubin_rag_ui} shows the interface as deployed on the \gls{RSP}.
 \label{sec:deployment}
  
 The virtual assistant is deployed using Rubin Observatory's standard deployment model, Phalanx \cite{SQR-056}. 
-Phalanx is built on a layered infrastructure \gls{stack}: \href{https://kubernetes.io}{Kubernetes} for container orchestration, \href{https://argo-cd.readthedocs.io}{Argo~CD} for GitOps-based continuous delivery, \href{https://helm.sh}{Helm} for packaging \gls{Kubernetes} applications, and the \href{https://safir.lsst.io}{Safir} framework for Rubin-specific service development.
+Phalanx is built on a layered infrastructure stack: \href{https://kubernetes.io}{Kubernetes} for container orchestration, \href{https://argo-cd.readthedocs.io}{Argo~CD} for GitOps-based continuous delivery, \href{https://helm.sh}{Helm} for packaging \gls{Kubernetes} applications, and the \href{https://safir.lsst.io}{Safir} framework for Rubin-specific service development.
 The virtual assistant is containerized via a Dockerfile in the repository and deployed through the same GitOps workflows used for all other \gls{RSP} services.
  
-The Phalanx-based deployment model means that the virtual assistant's \gls{configuration} is managed as code in the \href{https://github.com/lsst-sqre/phalanx}{Phalanx repository}, enabling reproducible deployments, version-controlled updates, and rollback capability.
+The Phalanx-based deployment model means that the virtual assistant's configuration is managed as code in the \href{https://github.com/lsst-sqre/phalanx}{Phalanx repository}, enabling reproducible deployments, version-controlled updates, and rollback capability.
   
 \subsection{Integration with the Rubin Science Platform}
 \label{sec:rsp_integration}
@@ -171,21 +170,19 @@ The \gls{LSST} will accumulate approximately 50\,PB of data products by the end 
 The \gls{RSP} is Rubin's answer to this challenge, providing cloud-based access to \gls{LSST} data products and services through three interfaces: the Portal (browser-based data discovery), Notebooks (Jupyter-based analysis), and Web APIs (programmatic access via Virtual Observatory interfaces).
 Deploying the virtual assistant within this same infrastructure provides several important advantages:
 
-\noindent\textbf{Co-location with the data}: Users interact with the virtual assistant in the same environment where they access and analyze \gls{LSST} data products, enabling a tightly integrated workflow in which documentation assistance and data analysis are available side by side.
-
-\noindent\textbf{Shared authentication and access control}: The virtual assistant inherits the RSP's identity management and access control infrastructure, ensuring that private or restricted resources are accessible only to authorized users without requiring separate login.
-
-\noindent\textbf{Operational monitoring}: The virtual assistant benefits from Rubin's existing service monitoring and alerting infrastructure, reducing the operational burden of running an additional service.
-
-\noindent\textbf{Dual-environment coverage}: Deployment at both the cloud RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
+\begin{itemize}
+\item\textbf{Co-location with the data}: Users interact with the virtual assistant in the same environment where they access and analyze \gls{LSST} data products, enabling a tightly integrated workflow in which documentation assistance and data analysis are available side by side.
+\item\textbf{Shared authentication and access control}: The virtual assistant inherits the RSP's identity management and access control infrastructure, ensuring that private or restricted resources are accessible only to authorized users without requiring separate login.
+\item\textbf{Operational monitoring}: The virtual assistant benefits from Rubin's existing service monitoring and alerting infrastructure, reducing the operational burden of running an additional service.
+\item\textbf{Dual-environment coverage}: Deployment at both the cloud RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
+\end{itemize}
 
 \subsection{Codebase}
 \label{sec:codebase}
  
-The codebase is developed in Python and maintained as open-source
-\gls{software} in the \href{https://github.com/lsst-dm/rubin_rag}{\texttt{lsst-dm/rubin\_rag}} GitHub repository.
+The codebase is developed in Python and maintained as open-source software in the \href{https://github.com/lsst-dm/rubin_rag}{\texttt{lsst-dm/rubin\_rag}} GitHub repository.
 The repository contains the Streamlit application, the Weaviate connection and query layer, the data ingestion code, and Jupyter notebooks used for prototyping and testing.
-The deployment \gls{configuration} is managed through a corresponding branch in the Phalanx repository.
+The deployment configuration is managed through a corresponding branch in the Phalanx repository.
 The project is released under the MIT license.
 
 % ============================================================================
@@ -211,9 +208,9 @@ The Rubin \gls{RAG} system ingests documents from the following sources:
 
 We use LangChain document loaders to extract text from files or to parse data returned by APIs.
 For PDFs, we use the \texttt{PyMuPDFLoader}, which parses text and tables effectively but does not recover non-text information embedded in images.
-Each loader outputs a list of LangChain \texttt{Document} objects containing the extracted text and associated \gls{metadata} (source file, creation date, page number).
-For GitHub repositories we use the \texttt{GithubFileLoader}, which retrieves files directly from a specified repository and branch via the GitHub \gls{API}; for Jira we query the Rubin Jira REST \gls{API} directly to retrieve ticket content and \gls{metadata}.
-In both cases the result is a list of LangChain \texttt{Document} objects containing extracted text and \gls{metadata}, ready for downstream chunking and embedding.
+Each loader outputs a list of LangChain \texttt{Document} objects containing the extracted text and associated metadata (source file, creation date, page number).
+For GitHub repositories we use the \texttt{GithubFileLoader}, which retrieves files directly from a specified repository and branch via the GitHub API; for Jira we query the Rubin Jira REST API directly to retrieve ticket content and metadata.
+In both cases the result is a list of LangChain \texttt{Document} objects containing extracted text and metadata, ready for downstream chunking and embedding.
 
 Several areas for improvement have been identified.
 The current pipeline loses information encoded in figures and diagrams, which are prevalent in Rubin documentation; vision-language models could generate text descriptions of these for embedding, making visual content searchable.
@@ -350,7 +347,7 @@ Evaluating alternative LLM backends, including more recent OpenAI models, Anthro
 Adopting a different LLM may also require a corresponding change of embedding model: Anthropic recommends VoyageAI embeddings for use with Claude, and VoyageAI models are strong on scientific and technical documents, code, and the preservation of semantic relationships in complex, specialized terminology, making them a natural candidate if the system moves to a Claude-based backend.
  
 \item\textbf{Corpus expansion and automation.}
-Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion pipeline with update triggers linked to source platforms (GitHub webhooks, \gls{API} polling for Jira and Confluence, Slack channel ingestion).
+Expanding the ingested corpus to cover all documentation relevant to each data release and automating the ingestion pipeline with update triggers linked to source platforms (GitHub webhooks, API polling for Jira and Confluence, Slack channel ingestion).
  
 \item\textbf{Productizing.}
 Transitioning from prototype to a production-quality service with robust monitoring, logging, usage analytics, and automatic re-ingestion of updated and new data sources.
@@ -366,7 +363,7 @@ This limits effectiveness on queries that require reasoning across multiple sour
 Agentic \gls{RAG} represents a natural evolution by introducing an explicit control layer that coordinates how the system reasons over external context.
 Rather than following a fixed pipeline, an agentic system can dynamically decide which collections to search, validate retrieved information for consistency, reformulate queries when initial retrieval is insufficient, invoke external tools, and iteratively refine responses.
  
-These capabilities are well suited to the most ambitious Rubin use cases described in Section~\ref{sec:motivation}: \gls{schema}-aware query construction that verifies column names against the current catalog \gls{schema}; tutorial-guided science workflows that assemble multi-step code examples from different sources; and cross-platform synthesis that combines information from technotes, Jira tickets, and forum posts into a coherent answer.
+These capabilities are well suited to the most ambitious Rubin use cases described in Section~\ref{sec:motivation}: schema-aware query construction that verifies column names against the current catalog schema; tutorial-guided science workflows that assemble multi-step code examples from different sources; and cross-platform synthesis that combines information from technotes, Jira tickets, and forum posts into a coherent answer.
 We plan to investigate agentic \gls{RAG} architectures as the system matures beyond the current prototype.
 
 % ============================================================================
@@ -375,7 +372,7 @@ We plan to investigate agentic \gls{RAG} architectures as the system matures bey
  
 We have presented the design and implementation of a \gls{RAG}-based virtual assistant for information discovery at the Vera C. Rubin Observatory, deployed as a service on the \gls{RSP}.
 The system addresses a real operational need: enabling both Rubin  Observatory staff and the Rubin science community to efficiently locate accurate information across a large, fragmented, and continuously evolving documentation ecosystem.
-The prototype is functional and deployed on the RSP at both the \gls{cloud}-based US Data Access Center and the on-premise USDF at SLAC, and is being prepared to support the community during the Early Science period.
+The prototype is functional and deployed on the RSP at both the cloud-based US Data Access Center and the on-premise USDF at SLAC, and is being prepared to support the community during the Early Science period.
 As the \gls{LSST} survey progresses and both data volume and documentation grow across successive releases, the importance of this capability will only increase.
 Rather than a static documentation virtual assistant, a value proposition that has eroded as general-purpose LLMs have become web-connected, the longer-term vision is a science enablement assistant that helps users go from a science question to working code against real Rubin data, grounded in authoritative and current sources.
-The \gls{RAG} value is not in knowing what the documentation says; it is in knowing which specific \gls{API} call, column name, or query pattern will actually work on the current data release.
+The \gls{RAG} value is not in knowing what the documentation says; it is in knowing which specific API call, column name, or query pattern will actually work on the current data release.
