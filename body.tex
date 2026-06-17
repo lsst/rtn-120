@@ -86,9 +86,9 @@ Figure~\ref{fig:architecture} shows the overall system architecture.
 % TODO: Finalize figure
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\textwidth]{figures/rubin_rag_architecture.pdf}
-  \caption{Architecture of the Rubin \gls{RAG} virtual assistant showing the flow from document ingestion through embedding, vector storage, retrieval, and response generation. Documents from the Rubin knowledge base are loaded, chunked, and embedded using OpenAI's \texttt{text-embedding-3-large} model. Embeddings and text chunks are stored in the Weaviate\cite{weaviate} vector database.
-  At query time, a user query submitted via the Streamlit frontend is embedded using the same model; the top-$k$ most similar chunks are retrieved and injected into the LLM prompt to produce a grounded response. The system is deployed on the \gls{RSP} through the Phalanx infrastructure. (FIGURE WILL BE IMPROVED BEFOR SUBMISSION}
+  \includegraphics[width=0.85\textwidth]{figures/rubin_rag_arch.pdf}
+  \caption{Architecture of the Rubin AI virtual assistant showing the flow from document ingestion through embedding, vector storage, retrieval, and response generation. Documents from the Rubin knowledge base are loaded, chunked, and embedded using OpenAI's \texttt{text-embedding-3-large} model. Embeddings and text chunks are stored in the Weaviate\cite{weaviate} vector database.
+  At query time, a user query submitted via the Streamlit frontend is embedded using the same model; the top-$k$ most similar chunks are retrieved and injected into the LLM prompt to produce a grounded response. The system is deployed on the \gls{RSP} through the Phalanx infrastructure.}
   \label{fig:architecture}
 \end{figure}
  
@@ -96,12 +96,13 @@ Figure~\ref{fig:architecture} shows the overall system architecture.
 \label{sec:rag_framework}
 
 The three words in Retrieval-Augmented Generation describe the three stages of the system:
-\begin{itemize}
-  \item \textbf{Retrieval.} Given a user query, the system searches an external knowledge base to find the most relevant document fragments. The user's query is converted into a vector embedding and compared against stored document embeddings using cosine similarity to identify the top-$k$ most semantically relevant chunks.
-  \item \textbf{Augmentation.} The retrieved chunks are assembled into a structured context block and combined with the original user query to form an augmented prompt. A system prompt instructs the LLM to base its answer on the provided context and to indicate when the available documentation does not contain sufficient information, rather than generating a speculative response. This augmentation step is what distinguishes \gls{RAG} from a standard LLM interaction: the model receives domain-specific context alongside the question.
-  \item \textbf{Generation.} The augmented prompt is passed to a generative LLM, which produces a natural language response conditioned on both the user's question and the retrieved context. Because the response is grounded in specific, retrieved documents rather than the model's compressed parametric knowledge alone, the output is more factually accurate and traceable to its sources.
-\end{itemize}
- 
+
+\noindent\textbf{Retrieval:} Given a user query, the system searches an external knowledge base to find the most relevant document fragments. The user's query is converted into a vector embedding and compared against stored document embeddings using cosine similarity to identify the top-$k$ most semantically relevant chunks. 
+
+\noindent\textbf{Augmentation:} The retrieved chunks are assembled into a structured context block and combined with the original user query to form an augmented prompt. A system prompt instructs the LLM to base its answer on the provided context and to indicate when the available documentation does not contain sufficient information, rather than generating a speculative response. This augmentation step is what distinguishes \gls{RAG} from a standard LLM interaction: the model receives domain-specific context alongside the question.
+
+\noindent\textbf{Generation:} The augmented prompt is passed to a generative LLM, which produces a natural language response conditioned on both the user's question and the retrieved context. Because the response is grounded in specific, retrieved documents rather than the model's compressed parametric knowledge alone, the output is more factually accurate and traceable to its sources.
+
 \noindent
 The following subsections describe the specific components selected for each stage, together with the frontend, deployment infrastructure, and platform integration that connect them into a working service.
  
@@ -169,12 +170,14 @@ From the outset, the RAG virtual assistant was designed to be deployed as a serv
 The \gls{LSST} will accumulate approximately 50\,\gls{PB} of data products by the end of year~1, growing to roughly 500\,\gls{PB} by year~10; far too large for users to download and analyse locally.
 The \gls{RSP} is Rubin's answer to this challenge, providing \gls{cloud}-based access to \gls{LSST} data products and services through three interfaces: the Portal (browser-based data discovery), Notebooks (Jupyter-based analysis), and Web APIs (programmatic access via Virtual Observatory interfaces).
 Deploying the virtual assistant within this same infrastructure provides several important advantages:
-\begin{itemize}
-  \item \textbf{Co-location with the data}: Users interact with the virtual assistant in the same environment where they access and analyze \gls{LSST} data products, enabling a tightly integrated workflow in which documentation assistance and data analysis are available side by side.
-  \item \textbf{Shared authentication and access control}: The virtual assistant inherits the RSP's identity management and access control infrastructure, ensuring that private or restricted resources are accessible only to authorized users without requiring separate login.
-  \item \textbf{Operational \gls{monitoring}}: The virtual assistant benefits from Rubin's existing service \gls{monitoring} and alerting infrastructure, reducing the operational burden of running an additional service.
-  \item \textbf{Dual-environment coverage}: Deployment at both the \gls{cloud} RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
-\end{itemize}
+
+\noindent\textbf{Co-location with the data}: Users interact with the virtual assistant in the same environment where they access and analyze \gls{LSST} data products, enabling a tightly integrated workflow in which documentation assistance and data analysis are available side by side.
+
+\noindent\textbf{Shared authentication and access control}: The virtual assistant inherits the RSP's identity management and access control infrastructure, ensuring that private or restricted resources are accessible only to authorized users without requiring separate login.
+
+\noindent\textbf{Operational \gls{monitoring}}: The virtual assistant benefits from Rubin's existing service \gls{monitoring} and alerting infrastructure, reducing the operational burden of running an additional service.
+
+\noindent\textbf{Dual-environment coverage}: Deployment at both the \gls{cloud} RSP and the \gls{USDF} ensures that the virtual assistant is accessible to users regardless of which environment they use for data analysis.
 
 \subsection{Codebase}
 \label{sec:codebase}
